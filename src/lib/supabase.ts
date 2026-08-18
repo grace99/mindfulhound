@@ -12,7 +12,8 @@ export const SUPABASE_URL =
 export const SUPABASE_PUBLISHABLE_KEY =
   (import.meta.env['VITE_SUPABASE_PUBLISHABLE_KEY'] as string | undefined) ??
   (import.meta.env['VITE_SUPABASE_ANON_KEY'] as string | undefined) ??
-  "";
+  "sb_publishable_IgY-8SFD-fVgeoZ4TLAJEQ_cyNJPoeW";
+
 
 export const isSupabaseConfigured = SUPABASE_PUBLISHABLE_KEY.length > 0;
 
