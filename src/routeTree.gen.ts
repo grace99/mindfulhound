@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AddRouteImport } from './routes/add'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
+import { Route as BudgetsRouteImport } from './routes/budgets'
 import { Route as EntriesRouteImport } from './routes/entries'
 
 const IndexRoute = IndexRouteImport.update({
@@ -29,6 +30,11 @@ const AnalyticsRoute = AnalyticsRouteImport.update({
   path: '/analytics',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BudgetsRoute = BudgetsRouteImport.update({
+  id: '/budgets',
+  path: '/budgets',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EntriesRoute = EntriesRouteImport.update({
   id: '/entries',
   path: '/entries',
@@ -39,12 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/add': typeof AddRoute
   '/analytics': typeof AnalyticsRoute
+  '/budgets': typeof BudgetsRoute
   '/entries': typeof EntriesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/add': typeof AddRoute
   '/analytics': typeof AnalyticsRoute
+  '/budgets': typeof BudgetsRoute
   '/entries': typeof EntriesRoute
 }
 export interface FileRoutesById {
@@ -52,20 +60,22 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/add': typeof AddRoute
   '/analytics': typeof AnalyticsRoute
+  '/budgets': typeof BudgetsRoute
   '/entries': typeof EntriesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/add' | '/analytics' | '/entries'
+  fullPaths: '/' | '/add' | '/analytics' | '/budgets' | '/entries'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/add' | '/analytics' | '/entries'
-  id: '__root__' | '/' | '/add' | '/analytics' | '/entries'
+  to: '/' | '/add' | '/analytics' | '/budgets' | '/entries'
+  id: '__root__' | '/' | '/add' | '/analytics' | '/budgets' | '/entries'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AddRoute: typeof AddRoute
   AnalyticsRoute: typeof AnalyticsRoute
+  BudgetsRoute: typeof BudgetsRoute
   EntriesRoute: typeof EntriesRoute
 }
 
@@ -92,6 +102,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AnalyticsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/budgets': {
+      id: '/budgets'
+      path: '/budgets'
+      fullPath: '/budgets'
+      preLoaderRoute: typeof BudgetsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/entries': {
       id: '/entries'
       path: '/entries'
@@ -106,6 +123,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AddRoute: AddRoute,
   AnalyticsRoute: AnalyticsRoute,
+  BudgetsRoute: BudgetsRoute,
   EntriesRoute: EntriesRoute,
 }
 export const routeTree = rootRouteImport
