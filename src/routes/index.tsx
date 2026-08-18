@@ -1,24 +1,284 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  Area,
+  AreaChart,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { AppShell } from "@/components/AppShell";
+import { Panel, Stat } from "@/components/Stat";
+import { Button } from "@/components/ui/button";
+import { useExpenses } from "@/lib/use-expenses";
+import {
+  CHART_COLORS,
+  badChoiceTotal,
+  currentMonthKey,
+  formatAmount,
+  formatDate,
+  isCounted,
+  loadBudgets,
+  monthKey,
+  monthlySeries,
+  sumBy,
+  todayISO,
+  totalOf,
+} from "@/lib/expenses";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
-  component: Index,
+  head: () => ({
+    meta: [
+      { title: "Daybook — Daily Expense Tracker & Analytics" },
+      {
+        name: "description",
+        content:
+          "Log daily purchases in seconds and see spend trends, category splits and budget alerts from your own expense ledger.",
+      },
+      { property: "og:title", content: "Daybook — Daily Expense Tracker & Analytics" },
+      {
+        property: "og:description",
+        content: "Capture every purchase and analyse where your money actually goes.",
+      },
+    ],
+  }),
+  component: Dashboard,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+function Dashboard() {
+  const { data: rows = [], isLoading, error } = useExpenses();
+  const budgets = loadBudgets();
+
+  const thisMonth = currentMonthKey();
+  const monthRows = rows.filter((r) => monthKey(r.tran_date) === thisMonth);
+  const today = todayISO();
+  const todayRows = rows.filter((r) => r.tran_date === today);
+
+  const monthTotal = totalOf(monthRows);
+  const dayCount = new Set(monthRows.filter(isCounted).map((r) => r.tran_date)).size || 1;
+  const trend = monthlySeries(rows).slice(-12);
+  const byType = sumBy(monthRows, (r) => r.exp_type ?? "");
+  const currency = rows[0]?.crcy ?? "INR";
+  const overBudget =
+    budgets.overall > 0 && monthTotal > budgets.overall ? monthTotal - budgets.overall : 0;
+
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
+    <AppShell
+      title="Your daybook"
+      subtitle={`${rows.length.toLocaleString("en-IN")} purchases captured · ${formatAmount(totalOf(rows), currency)} lifetime`}
+      actions={
+        <Button asChild>
+          <Link to="/add">Add expense</Link>
+        </Button>
+      }
     >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+      {error && (
+        <p className="mb-6 rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm">
+          Could not load expenses: {(error as Error).message}
+        </p>
+      )}
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Stat
+          label="This month"
+          value={formatAmount(monthTotal, currency)}
+          hint={`${monthRows.length} entries`}
+          tone="primary"
+        />
+        <Stat
+          label="Today"
+          value={formatAmount(totalOf(todayRows), currency)}
+          hint={`${todayRows.length} entries`}
+        />
+        <Stat
+          label="Avg / active day"
+          value={formatAmount(monthTotal / dayCount, currency)}
+          hint="This month"
+          tone="accent"
+        />
+        <Stat
+          label="Bad choices"
+          value={formatAmount(badChoiceTotal(monthRows), currency)}
+          hint="Flagged this month"
+          tone="destructive"
+        />
+      </div>
+
+      {budgets.overall > 0 && (
+        <div
+          className={`mt-6 rounded-xl border px-4 py-3 text-sm ${
+            overBudget
+              ? "border-destructive/40 bg-destructive/10"
+              : "border-success/40 bg-success/10"
+          }`}
+        >
+          {overBudget ? (
+            <>
+              Over your monthly budget by{" "}
+              <strong className="numeric">{formatAmount(overBudget, currency)}</strong>.
+            </>
+          ) : (
+            <>
+              <strong className="numeric">
+                {formatAmount(budgets.overall - monthTotal, currency)}
+              </strong>{" "}
+              left of your {formatAmount(budgets.overall, currency)} monthly budget.
+            </>
+          )}{" "}
+          <Link to="/budgets" className="underline">
+            Manage budgets
+          </Link>
+        </div>
+      )}
+
+      <div className="mt-6 grid gap-5 lg:grid-cols-5">
+        <Panel
+          title="Spend over time"
+          description="Last 12 months"
+          className="lg:col-span-3"
+        >
+          <div className="h-64">
+            {isLoading ? (
+              <Skeleton />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={trend} margin={{ left: 4, right: 4, top: 8 }}>
+                  <defs>
+                    <linearGradient id="fillTrend" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="var(--color-chart-1)" stopOpacity={0.55} />
+                      <stop offset="100%" stopColor="var(--color-chart-1)" stopOpacity={0.03} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis
+                    dataKey="label"
+                    tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
+                    stroke="var(--color-border)"
+                  />
+                  <YAxis
+                    tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
+                    stroke="var(--color-border)"
+                    width={54}
+                    tickFormatter={(v: number) => `${Math.round(v / 1000)}k`}
+                  />
+                  <Tooltip
+                    contentStyle={tooltipStyle}
+                    formatter={(v: number) => formatAmount(v, currency)}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="total"
+                    stroke="var(--color-chart-1)"
+                    strokeWidth={2}
+                    fill="url(#fillTrend)"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </Panel>
+
+        <Panel
+          title="Where it went"
+          description="Categories this month"
+          className="lg:col-span-2"
+        >
+          <div className="h-64">
+            {isLoading ? (
+              <Skeleton />
+            ) : byType.length === 0 ? (
+              <Empty />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={byType.slice(0, 6)}
+                    dataKey="total"
+                    nameKey="name"
+                    innerRadius="55%"
+                    outerRadius="82%"
+                    paddingAngle={2}
+                    stroke="none"
+                  >
+                    {byType.slice(0, 6).map((_, i) => (
+                      <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={tooltipStyle}
+                    formatter={(v: number) => formatAmount(v, currency)}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+          <ul className="mt-3 space-y-1.5 text-sm">
+            {byType.slice(0, 5).map((c, i) => (
+              <li key={c.name} className="flex items-center gap-2">
+                <span
+                  className="size-2.5 shrink-0 rounded-full"
+                  style={{ background: CHART_COLORS[i % CHART_COLORS.length] }}
+                />
+                <span className="truncate text-muted-foreground">{c.name}</span>
+                <span className="numeric ml-auto">{formatAmount(c.total, currency)}</span>
+              </li>
+            ))}
+          </ul>
+        </Panel>
+      </div>
+
+      <Panel
+        title="Latest purchases"
+        className="mt-5"
+        actions={
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/entries">View ledger</Link>
+          </Button>
+        }
+      >
+        <ul className="divide-y divide-border">
+          {rows.slice(0, 8).map((r) => (
+            <li key={r.uid} className="flex items-center gap-3 py-2.5 text-sm">
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-medium">{r.exp_desc || r.exp_subtyp || "Untitled"}</p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {formatDate(r.tran_date)} · {r.exp_type ?? "—"} · {r.location ?? "—"}
+                </p>
+              </div>
+              <span className="numeric shrink-0 font-semibold">
+                {formatAmount(Number(r.abs_amt ?? 0), r.crcy ?? currency)}
+              </span>
+            </li>
+          ))}
+          {!isLoading && rows.length === 0 && (
+            <li className="py-6 text-center text-sm text-muted-foreground">
+              No purchases yet — add your first one.
+            </li>
+          )}
+        </ul>
+      </Panel>
+    </AppShell>
+  );
+}
+
+const tooltipStyle = {
+  background: "var(--color-popover)",
+  border: "1px solid var(--color-border)",
+  borderRadius: "10px",
+  fontSize: "12px",
+  color: "var(--color-popover-foreground)",
+};
+
+function Skeleton() {
+  return <div className="size-full animate-pulse rounded-lg bg-secondary/60" />;
+}
+
+function Empty() {
+  return (
+    <div className="grid size-full place-items-center text-sm text-muted-foreground">
+      No data for this period
     </div>
   );
 }
