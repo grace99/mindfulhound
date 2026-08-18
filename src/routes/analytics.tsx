@@ -1,0 +1,355 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { AppShell } from "@/components/AppShell";
+import { Panel, Stat } from "@/components/Stat";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useExpenses } from "@/lib/use-expenses";
+import {
+  CHART_COLORS,
+  badChoiceTotal,
+  dailySeries,
+  formatAmount,
+  isCounted,
+  monthlySeries,
+  sumBy,
+  todayISO,
+  totalOf,
+  uniqueValues,
+  weekdaySeries,
+} from "@/lib/expenses";
+
+export const Route = createFileRoute("/analytics")({
+  head: () => ({
+    meta: [
+      { title: "Spending analytics — Daybook" },
+      {
+        name: "description",
+        content:
+          "Trends over time, category and sub-category breakdowns, weekday patterns and location insights for your expenses.",
+      },
+      { property: "og:title", content: "Spending analytics — Daybook" },
+      {
+        property: "og:description",
+        content: "Slice your spending by period, category, weekday and place.",
+      },
+    ],
+  }),
+  component: AnalyticsPage,
+});
+
+const tooltipStyle = {
+  background: "var(--color-popover)",
+  border: "1px solid var(--color-border)",
+  borderRadius: "10px",
+  fontSize: "12px",
+  color: "var(--color-popover-foreground)",
+};
+
+function AnalyticsPage() {
+  const { data: rows = [] } = useExpenses();
+  const currency = rows[0]?.crcy ?? "INR";
+
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState(todayISO());
+  const [type, setType] = useState("all");
+  const [location, setLocation] = useState("all");
+  const [grain, setGrain] = useState<"day" | "month">("month");
+
+  const types = useMemo(() => uniqueValues(rows, "exp_type"), [rows]);
+  const locations = useMemo(() => uniqueValues(rows, "location"), [rows]);
+
+  const filtered = useMemo(
+    () =>
+      rows.filter((r) => {
+        if (from && (r.tran_date ?? "") < from) return false;
+        if (to && (r.tran_date ?? "") > to) return false;
+        if (type !== "all" && (r.exp_type ?? "") !== type) return false;
+        if (location !== "all" && (r.location ?? "") !== location) return false;
+        return true;
+      }),
+    [rows, from, to, type, location],
+  );
+
+  const total = totalOf(filtered);
+  const counted = filtered.filter(isCounted);
+  const trend = grain === "month" ? monthlySeries(filtered) : dailySeries(filtered).slice(-60);
+  const byType = sumBy(filtered, (r) => r.exp_type ?? "");
+  const bySubtype = sumBy(filtered, (r) => r.exp_subtyp ?? "").slice(0, 10);
+  const byLocation = sumBy(filtered, (r) => r.location ?? "").slice(0, 6);
+  const weekdays = weekdaySeries(filtered);
+  const bad = badChoiceTotal(filtered);
+  const biggest = [...counted].sort(
+    (a, b) => Number(b.abs_amt ?? 0) - Number(a.abs_amt ?? 0),
+  )[0];
+
+  return (
+    <AppShell title="Analytics" subtitle="Slice your spending any way you like.">
+      <Panel className="mb-5">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <label className="grid gap-1 text-xs text-muted-foreground">
+            From
+            <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+          </label>
+          <label className="grid gap-1 text-xs text-muted-foreground">
+            To
+            <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+          </label>
+          <label className="grid gap-1 text-xs text-muted-foreground">
+            Category
+            <select
+              value={type}
+              onChange={(e) => setType(e.target.value)}
+              className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground"
+            >
+              <option value="all">All</option>
+              {types.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="grid gap-1 text-xs text-muted-foreground">
+            Location
+            <select
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground"
+            >
+              <option value="all">All</option>
+              {locations.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className="flex items-end gap-2">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setFrom("");
+                setTo(todayISO());
+                setType("all");
+                setLocation("all");
+              }}
+            >
+              Reset
+            </Button>
+          </div>
+        </div>
+      </Panel>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Stat
+          label="Total spend"
+          value={formatAmount(total, currency)}
+          hint={`${counted.length} counted entries`}
+          tone="primary"
+        />
+        <Stat
+          label="Average ticket"
+          value={formatAmount(counted.length ? total / counted.length : 0, currency)}
+        />
+        <Stat
+          label="Bad-choice share"
+          value={`${total ? Math.round((bad / total) * 100) : 0}%`}
+          hint={formatAmount(bad, currency)}
+          tone="destructive"
+        />
+        <Stat
+          label="Biggest single spend"
+          value={formatAmount(Number(biggest?.abs_amt ?? 0), biggest?.crcy ?? currency)}
+          hint={biggest?.exp_desc ?? "—"}
+          tone="accent"
+        />
+      </div>
+
+      <Panel
+        title="Spend over time"
+        className="mt-5"
+        actions={
+          <div className="flex gap-1 rounded-md bg-secondary p-1">
+            {(["day", "month"] as const).map((g) => (
+              <button
+                key={g}
+                onClick={() => setGrain(g)}
+                className={`rounded px-2.5 py-1 text-xs capitalize transition-colors ${
+                  grain === g
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {g}
+              </button>
+            ))}
+          </div>
+        }
+      >
+        <div className="h-72">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={trend} margin={{ left: 4, right: 8, top: 8 }}>
+              <CartesianGrid stroke="var(--color-border)" vertical={false} />
+              <XAxis
+                dataKey="label"
+                tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
+                stroke="var(--color-border)"
+              />
+              <YAxis
+                tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
+                stroke="var(--color-border)"
+                width={54}
+                tickFormatter={(v: number) => (v >= 1000 ? `${Math.round(v / 1000)}k` : String(v))}
+              />
+              <Tooltip
+                contentStyle={tooltipStyle}
+                formatter={(v: number) => formatAmount(v, currency)}
+              />
+              <Line
+                type="monotone"
+                dataKey="total"
+                stroke="var(--color-chart-1)"
+                strokeWidth={2}
+                dot={false}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </Panel>
+
+      <div className="mt-5 grid gap-5 lg:grid-cols-2">
+        <Panel title="By category">
+          <div className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={byType.slice(0, 8)} layout="vertical" margin={{ left: 8, right: 16 }}>
+                <XAxis
+                  type="number"
+                  tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
+                  stroke="var(--color-border)"
+                  tickFormatter={(v: number) => (v >= 1000 ? `${Math.round(v / 1000)}k` : String(v))}
+                />
+                <YAxis
+                  type="category"
+                  dataKey="name"
+                  width={130}
+                  tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
+                  stroke="var(--color-border)"
+                />
+                <Tooltip
+                  contentStyle={tooltipStyle}
+                  formatter={(v: number) => formatAmount(v, currency)}
+                />
+                <Bar dataKey="total" radius={[0, 6, 6, 0]}>
+                  {byType.slice(0, 8).map((_, i) => (
+                    <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </Panel>
+
+        <Panel title="Top sub-categories" description="Highest 10 by spend">
+          <ul className="space-y-2">
+            {bySubtype.map((s) => (
+              <li key={s.name} className="text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="min-w-0 flex-1 truncate text-muted-foreground">{s.name}</span>
+                  <span className="numeric font-semibold">{formatAmount(s.total, currency)}</span>
+                </div>
+                <div className="mt-1 h-1.5 rounded-full bg-secondary">
+                  <div
+                    className="h-full rounded-full bg-primary"
+                    style={{
+                      width: `${bySubtype[0] ? (s.total / bySubtype[0].total) * 100 : 0}%`,
+                    }}
+                  />
+                </div>
+              </li>
+            ))}
+            {bySubtype.length === 0 && (
+              <li className="text-sm text-muted-foreground">No data for these filters.</li>
+            )}
+          </ul>
+        </Panel>
+
+        <Panel title="Weekday pattern" description="Which days cost you most">
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={weekdays}>
+                <CartesianGrid stroke="var(--color-border)" vertical={false} />
+                <XAxis
+                  dataKey="name"
+                  tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
+                  stroke="var(--color-border)"
+                />
+                <YAxis
+                  tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
+                  stroke="var(--color-border)"
+                  width={54}
+                  tickFormatter={(v: number) => (v >= 1000 ? `${Math.round(v / 1000)}k` : String(v))}
+                />
+                <Tooltip
+                  contentStyle={tooltipStyle}
+                  formatter={(v: number) => formatAmount(v, currency)}
+                />
+                <Bar dataKey="total" fill="var(--color-chart-2)" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </Panel>
+
+        <Panel title="Where you spend" description="Top locations">
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={byLocation}
+                  dataKey="total"
+                  nameKey="name"
+                  outerRadius="80%"
+                  stroke="none"
+                >
+                  {byLocation.map((_, i) => (
+                    <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={tooltipStyle}
+                  formatter={(v: number) => formatAmount(v, currency)}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <ul className="mt-3 grid gap-1.5 text-sm sm:grid-cols-2">
+            {byLocation.map((c, i) => (
+              <li key={c.name} className="flex items-center gap-2">
+                <span
+                  className="size-2.5 shrink-0 rounded-full"
+                  style={{ background: CHART_COLORS[i % CHART_COLORS.length] }}
+                />
+                <span className="truncate text-muted-foreground">{c.name}</span>
+                <span className="numeric ml-auto">{formatAmount(c.total, currency)}</span>
+              </li>
+            ))}
+          </ul>
+        </Panel>
+      </div>
+    </AppShell>
+  );
+}
