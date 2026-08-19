@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useDeleteExpense, useExpenses, useUpdateExpense } from "@/lib/use-expenses";
 import {
+  amountOf,
   formatAmount,
   formatDate,
   isFlagged,
@@ -149,7 +150,7 @@ function EntriesPage() {
                   </td>
                   <td className="py-2.5 pr-3 text-muted-foreground">{r.location ?? "—"}</td>
                   <td className="numeric py-2.5 pr-3 text-right font-semibold">
-                    {formatAmount(Number(r.abs_amt ?? 0), r.crcy ?? "INR")}
+                    {formatAmount(amountOf(r), r.crcy ?? "INR")}
                   </td>
                   <td className="py-2.5">
                     <div className="flex justify-end gap-1">

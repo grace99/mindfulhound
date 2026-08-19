@@ -13,9 +13,15 @@ import {
 import { AppShell } from "@/components/AppShell";
 import { Panel, Stat } from "@/components/Stat";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import { useExpenses } from "@/lib/use-expenses";
 import {
   CHART_COLORS,
+  amountOf,
+  currentSpendYear,
+  inSpendYear,
+  spendYearLabel,
+  spendYearsIn,
   badChoiceTotal,
   currentMonthKey,
   formatAmount,
@@ -52,15 +58,20 @@ function Dashboard() {
   const { data: rows = [], isLoading, error } = useExpenses();
   const budgets = loadBudgets();
 
-  const thisMonth = currentMonthKey();
-  const monthRows = rows.filter((r) => monthKey(r.tran_date) === thisMonth);
-  const today = todayISO();
-  const todayRows = rows.filter((r) => r.tran_date === today);
+  const [year, setYear] = useState(currentSpendYear());
+  const years = spendYearsIn(rows);
+  const yearRows = rows.filter((r) => inSpendYear(r, year));
 
+  const thisMonth = currentMonthKey();
+  const monthRows = yearRows.filter((r) => monthKey(r.tran_date) === thisMonth);
+  const today = todayISO();
+  const todayRows = yearRows.filter((r) => r.tran_date === today);
+
+  const yearTotal = totalOf(yearRows);
   const monthTotal = totalOf(monthRows);
   const dayCount = new Set(monthRows.filter(isCounted).map((r) => r.tran_date)).size || 1;
-  const trend = monthlySeries(rows).slice(-12);
-  const byType = sumBy(monthRows, (r) => r.exp_type ?? "");
+  const trend = monthlySeries(yearRows).slice(-12);
+  const byType = sumBy(monthRows.length ? monthRows : yearRows, (r) => r.exp_type ?? "");
   const currency = rows[0]?.crcy ?? "INR";
   const overBudget =
     budgets.overall > 0 && monthTotal > budgets.overall ? monthTotal - budgets.overall : 0;
@@ -68,7 +79,7 @@ function Dashboard() {
   return (
     <AppShell
       title="Your daybook"
-      subtitle={`${rows.length.toLocaleString("en-IN")} purchases captured · ${formatAmount(totalOf(rows), currency)} lifetime`}
+      subtitle={`Spend year ${spendYearLabel(year)} · ${yearRows.length.toLocaleString("en-IN")} purchases · ${formatAmount(yearTotal, currency)} (1 Aug – 31 Jul)`}
       actions={
         <Button asChild>
           <Link to="/add">Add expense</Link>
@@ -81,7 +92,29 @@ function Dashboard() {
         </p>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mb-5 flex flex-wrap gap-1 rounded-lg bg-secondary p-1">
+        {years.map((n) => (
+          <button
+            key={n}
+            onClick={() => setYear(n)}
+            className={`rounded-md px-3 py-1.5 text-sm transition-colors ${
+              year === n
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {spendYearLabel(n)}
+          </button>
+        ))}
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <Stat
+          label={`Year ${spendYearLabel(year)}`}
+          value={formatAmount(yearTotal, currency)}
+          hint={`${yearRows.length} entries`}
+          tone="accent"
+        />
         <Stat
           label="This month"
           value={formatAmount(monthTotal, currency)}
@@ -137,7 +170,7 @@ function Dashboard() {
       <div className="mt-6 grid gap-5 lg:grid-cols-5">
         <Panel
           title="Spend over time"
-          description="Last 12 months"
+          description={`Months in ${spendYearLabel(year)}`}
           className="lg:col-span-3"
         >
           <div className="h-64">
@@ -182,7 +215,7 @@ function Dashboard() {
 
         <Panel
           title="Where it went"
-          description="Categories this month"
+          description={monthRows.length ? "Categories this month" : `Categories in ${spendYearLabel(year)}`}
           className="lg:col-span-2"
         >
           <div className="h-64">
@@ -239,7 +272,7 @@ function Dashboard() {
         }
       >
         <ul className="divide-y divide-border">
-          {rows.slice(0, 8).map((r) => (
+          {yearRows.slice(0, 8).map((r) => (
             <li key={r.uid} className="flex items-center gap-3 py-2.5 text-sm">
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium">{r.exp_desc || r.exp_subtyp || "Untitled"}</p>
@@ -248,11 +281,11 @@ function Dashboard() {
                 </p>
               </div>
               <span className="numeric shrink-0 font-semibold">
-                {formatAmount(Number(r.abs_amt ?? 0), r.crcy ?? currency)}
+                {formatAmount(amountOf(r), r.crcy ?? currency)}
               </span>
             </li>
           ))}
-          {!isLoading && rows.length === 0 && (
+          {!isLoading && yearRows.length === 0 && (
             <li className="py-6 text-center text-sm text-muted-foreground">
               No purchases yet — add your first one.
             </li>

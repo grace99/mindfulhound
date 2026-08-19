@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { useExpenses } from "@/lib/use-expenses";
 import {
   CHART_COLORS,
+  amountOf,
   badChoiceTotal,
   dailySeries,
   formatAmount,
@@ -28,6 +29,10 @@ import {
   monthlySeries,
   sumBy,
   todayISO,
+  spendYearLabel,
+  spendYearsIn,
+  inSpendYear,
+  currentSpendYear,
   totalOf,
   uniqueValues,
   weekdaySeries,
@@ -69,20 +74,23 @@ function AnalyticsPage() {
   const [type, setType] = useState("all");
   const [location, setLocation] = useState("all");
   const [grain, setGrain] = useState<"day" | "month">("month");
+  const [year, setYear] = useState<string>(String(currentSpendYear()));
 
+  const years = useMemo(() => spendYearsIn(rows), [rows]);
   const types = useMemo(() => uniqueValues(rows, "exp_type"), [rows]);
   const locations = useMemo(() => uniqueValues(rows, "location"), [rows]);
 
   const filtered = useMemo(
     () =>
       rows.filter((r) => {
+        if (year !== "all" && !inSpendYear(r, Number(year))) return false;
         if (from && (r.tran_date ?? "") < from) return false;
         if (to && (r.tran_date ?? "") > to) return false;
         if (type !== "all" && (r.exp_type ?? "") !== type) return false;
         if (location !== "all" && (r.location ?? "") !== location) return false;
         return true;
       }),
-    [rows, from, to, type, location],
+    [rows, year, from, to, type, location],
   );
 
   const total = totalOf(filtered);
@@ -94,13 +102,28 @@ function AnalyticsPage() {
   const weekdays = weekdaySeries(filtered);
   const bad = badChoiceTotal(filtered);
   const biggest = [...counted].sort(
-    (a, b) => Number(b.abs_amt ?? 0) - Number(a.abs_amt ?? 0),
+    (a, b) => amountOf(b) - amountOf(a),
   )[0];
 
   return (
     <AppShell title="Analytics" subtitle="Slice your spending any way you like.">
       <Panel className="mb-5">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+          <label className="grid gap-1 text-xs text-muted-foreground">
+            Spend year
+            <select
+              value={year}
+              onChange={(e) => setYear(e.target.value)}
+              className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground"
+            >
+              <option value="all">All years</option>
+              {years.map((n) => (
+                <option key={n} value={String(n)}>
+                  {spendYearLabel(n)}
+                </option>
+              ))}
+            </select>
+          </label>
           <label className="grid gap-1 text-xs text-muted-foreground">
             From
             <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
@@ -143,8 +166,9 @@ function AnalyticsPage() {
             <Button
               variant="ghost"
               onClick={() => {
+                setYear(String(currentSpendYear()));
                 setFrom("");
-                setTo(todayISO());
+                setTo("");
                 setType("all");
                 setLocation("all");
               }}
@@ -174,7 +198,7 @@ function AnalyticsPage() {
         />
         <Stat
           label="Biggest single spend"
-          value={formatAmount(Number(biggest?.abs_amt ?? 0), biggest?.crcy ?? currency)}
+          value={formatAmount(biggest ? amountOf(biggest) : 0, biggest?.crcy ?? currency)}
           hint={biggest?.exp_desc ?? "—"}
           tone="accent"
         />

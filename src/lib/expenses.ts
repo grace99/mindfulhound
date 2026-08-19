@@ -17,6 +17,7 @@ export type Expense = {
   bad_choice: string | null;
   crcy: string | null;
   abs_amt: number | null;
+  t_amt: number | null;
 };
 
 export type ExpenseInput = Omit<Expense, "uid">;
@@ -38,14 +39,61 @@ export function isFlagged(value: string | null | undefined) {
   return v === "yes" || v === "y" || v === "true" || v === "1";
 }
 
-/** Rows marked exclude are kept in the ledger but left out of spend analytics. */
+/** Categories always kept out of spend analytics. */
+export const EXCLUDED_TYPES = ["business"];
+
+/**
+ * Analytics only counts rows where `exclude` is NULL/blank and the category is
+ * not one of the excluded ones (e.g. BUSINESS).
+ */
 export function isCounted(row: Expense) {
-  return !isFlagged(row.exclude);
+  if (row.exclude !== null && String(row.exclude).trim() !== "") return false;
+  const t = (row.exp_type ?? "").trim().toLowerCase();
+  return !EXCLUDED_TYPES.includes(t);
 }
 
-export function amountOf(row: Expense) {
-  return Number(row.abs_amt ?? 0);
+/** Prefers the accurately computed t_amt, falling back to abs_amt. */
+export function amountOf(row: Pick<Expense, "t_amt" | "abs_amt">) {
+  return Number(row.t_amt ?? row.abs_amt ?? 0);
 }
+
+/* ------------------------------- spend years ------------------------------ */
+/* A spend year runs 1 Aug → 31 Jul. nth_yr = 1 is Aug 2025 → Jul 2026. */
+
+export const SPEND_YEAR_BASE = 2025;
+
+export function spendYearOf(dateStr: string | null): number | null {
+  if (!dateStr) return null;
+  const y = Number(dateStr.slice(0, 4));
+  const m = Number(dateStr.slice(5, 7));
+  if (!y || !m) return null;
+  return y - SPEND_YEAR_BASE + (m >= 8 ? 1 : 0);
+}
+
+export function spendYearLabel(n: number) {
+  const start = SPEND_YEAR_BASE + n - 1;
+  return `${start}-${String((start + 1) % 100).padStart(2, "0")}`;
+}
+
+export function currentSpendYear() {
+  return spendYearOf(todayISO()) ?? 1;
+}
+
+/** nth_yr values present in the data (falls back to the derived spend year). */
+export function spendYearsIn(rows: Expense[]) {
+  const set = new Set<number>();
+  for (const r of rows) {
+    const n = r.nth_yr ?? spendYearOf(r.tran_date);
+    if (n && n > 0) set.add(n);
+  }
+  set.add(currentSpendYear());
+  return [...set].sort((a, b) => a - b);
+}
+
+export function inSpendYear(row: Expense, n: number) {
+  return (row.nth_yr ?? spendYearOf(row.tran_date)) === n;
+}
+
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -55,7 +103,7 @@ export function deriveDateParts(dateStr: string) {
   return {
     cal_day: DAY_NAMES[d.getDay()] ?? null,
     month: d.getMonth() + 1,
-    nth_yr: d.getFullYear(),
+    nth_yr: spendYearOf(dateStr),
   };
 }
 

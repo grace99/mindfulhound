@@ -4,7 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { ExpenseForm } from "@/components/ExpenseForm";
 import { Panel } from "@/components/Stat";
 import { useCreateExpense, useExpenses } from "@/lib/use-expenses";
-import { formatAmount, formatDate, type Expense } from "@/lib/expenses";
+import { amountOf, formatAmount, formatDate, type Expense } from "@/lib/expenses";
 
 export const Route = createFileRoute("/add")({
   head: () => ({
@@ -59,7 +59,7 @@ function AddExpensePage() {
                       {r.exp_desc || r.exp_subtyp || "Untitled"}
                     </span>
                     <span className="numeric font-semibold">
-                      {formatAmount(Number(r.abs_amt ?? 0), r.crcy ?? "INR")}
+                      {formatAmount(amountOf(r), r.crcy ?? "INR")}
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground">
