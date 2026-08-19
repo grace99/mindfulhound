@@ -103,7 +103,7 @@ export function deriveDateParts(dateStr: string) {
   return {
     cal_day: DAY_NAMES[d.getDay()] ?? null,
     month: d.getMonth() + 1,
-    nth_yr: d.getFullYear(),
+    nth_yr: spendYearOf(dateStr),
   };
 }
 
