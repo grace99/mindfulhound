@@ -94,7 +94,6 @@ function AnalyticsPage() {
       }),
     [rows, effYear, from, to, type, location],
   );
-  );
 
   const total = totalOf(filtered);
   const counted = filtered.filter(isCounted);
