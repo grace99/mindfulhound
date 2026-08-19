@@ -32,8 +32,6 @@ import {
   spendYearLabel,
   spendYearsIn,
   inSpendYear,
-  currentSpendYear,
-  defaultSpendYear,
   totalOf,
   uniqueValues,
   weekdaySeries,
