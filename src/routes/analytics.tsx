@@ -32,7 +32,7 @@ import {
   spendYearLabel,
   spendYearsIn,
   inSpendYear,
-  currentSpendYear,
+  defaultSpendYear,
   totalOf,
   uniqueValues,
   weekdaySeries,
@@ -74,23 +74,24 @@ function AnalyticsPage() {
   const [type, setType] = useState("all");
   const [location, setLocation] = useState("all");
   const [grain, setGrain] = useState<"day" | "month">("month");
-  const [year, setYear] = useState<string>(String(currentSpendYear()));
+  const [year, setYear] = useState<string>("");
 
   const years = useMemo(() => spendYearsIn(rows), [rows]);
+  const effYear = year || String(defaultSpendYear(rows));
   const types = useMemo(() => uniqueValues(rows, "exp_type"), [rows]);
   const locations = useMemo(() => uniqueValues(rows, "location"), [rows]);
 
   const filtered = useMemo(
     () =>
       rows.filter((r) => {
-        if (year !== "all" && !inSpendYear(r, Number(year))) return false;
+        if (effYear !== "all" && !inSpendYear(r, Number(effYear))) return false;
         if (from && (r.tran_date ?? "") < from) return false;
         if (to && (r.tran_date ?? "") > to) return false;
         if (type !== "all" && (r.exp_type ?? "") !== type) return false;
         if (location !== "all" && (r.location ?? "") !== location) return false;
         return true;
       }),
-    [rows, year, from, to, type, location],
+    [rows, effYear, from, to, type, location],
   );
 
   const total = totalOf(filtered);
@@ -112,7 +113,7 @@ function AnalyticsPage() {
           <label className="grid gap-1 text-xs text-muted-foreground">
             Spend year
             <select
-              value={year}
+              value={effYear}
               onChange={(e) => setYear(e.target.value)}
               className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground"
             >
@@ -166,7 +167,7 @@ function AnalyticsPage() {
             <Button
               variant="ghost"
               onClick={() => {
-                setYear(String(currentSpendYear()));
+                setYear("");
                 setFrom("");
                 setTo("");
                 setType("all");
