@@ -94,6 +94,16 @@ export function inSpendYear(row: Expense, n: number) {
   return (row.nth_yr ?? spendYearOf(row.tran_date)) === n;
 }
 
+/** Latest spend year that actually has rows; falls back to the current one. */
+export function defaultSpendYear(rows: Expense[]) {
+  let max = 0;
+  for (const r of rows) {
+    const n = r.nth_yr ?? spendYearOf(r.tran_date);
+    if (n && n > max) max = n;
+  }
+  return max || currentSpendYear();
+}
+
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
