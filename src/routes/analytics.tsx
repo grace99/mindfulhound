@@ -114,7 +114,7 @@ function AnalyticsPage() {
           <label className="grid gap-1 text-xs text-muted-foreground">
             Spend year
             <select
-              value={year}
+              value={effYear}
               onChange={(e) => setYear(e.target.value)}
               className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground"
             >
@@ -168,7 +168,7 @@ function AnalyticsPage() {
             <Button
               variant="ghost"
               onClick={() => {
-                setYear(String(currentSpendYear()));
+                setYear("");
                 setFrom("");
                 setTo("");
                 setType("all");
