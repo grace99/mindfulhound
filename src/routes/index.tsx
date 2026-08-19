@@ -18,7 +18,6 @@ import { useExpenses } from "@/lib/use-expenses";
 import {
   CHART_COLORS,
   amountOf,
-  currentSpendYear,
   defaultSpendYear,
   inSpendYear,
   spendYearLabel,
