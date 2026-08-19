@@ -19,6 +19,7 @@ import {
   CHART_COLORS,
   amountOf,
   currentSpendYear,
+  defaultSpendYear,
   inSpendYear,
   spendYearLabel,
   spendYearsIn,
