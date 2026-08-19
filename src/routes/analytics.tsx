@@ -33,6 +33,7 @@ import {
   spendYearsIn,
   inSpendYear,
   currentSpendYear,
+  defaultSpendYear,
   totalOf,
   uniqueValues,
   weekdaySeries,
@@ -74,7 +75,7 @@ function AnalyticsPage() {
   const [type, setType] = useState("all");
   const [location, setLocation] = useState("all");
   const [grain, setGrain] = useState<"day" | "month">("month");
-  const [year, setYear] = useState<string>(String(currentSpendYear()));
+  const [year, setYear] = useState<string>("");
 
   const years = useMemo(() => spendYearsIn(rows), [rows]);
   const types = useMemo(() => uniqueValues(rows, "exp_type"), [rows]);
@@ -83,7 +84,7 @@ function AnalyticsPage() {
   const filtered = useMemo(
     () =>
       rows.filter((r) => {
-        if (year !== "all" && !inSpendYear(r, Number(year))) return false;
+        if (effYear !== "all" && !inSpendYear(r, Number(effYear))) return false;
         if (from && (r.tran_date ?? "") < from) return false;
         if (to && (r.tran_date ?? "") > to) return false;
         if (type !== "all" && (r.exp_type ?? "") !== type) return false;
