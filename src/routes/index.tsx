@@ -248,7 +248,7 @@ function Dashboard() {
                 </p>
               </div>
               <span className="numeric shrink-0 font-semibold">
-                {formatAmount(Number(r.abs_amt ?? 0), r.crcy ?? currency)}
+                {formatAmount(amountOf(r), r.crcy ?? currency)}
               </span>
             </li>
           ))}

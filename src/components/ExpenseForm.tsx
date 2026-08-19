@@ -19,7 +19,7 @@ import {
 type Draft = {
   tran_date: string;
   exp_desc: string;
-  abs_amt: string;
+  t_amt: string;
   exp_type: string;
   exp_subtyp: string;
   location: string;
@@ -33,7 +33,7 @@ function toDraft(row?: Expense): Draft {
   return {
     tran_date: row?.tran_date ?? todayISO(),
     exp_desc: row?.exp_desc ?? "",
-    abs_amt: row ? String(row.abs_amt ?? "") : "",
+    t_amt: row ? String(row.t_amt ?? row.abs_amt ?? "") : "",
     exp_type: row?.exp_type ?? DEFAULTS.exp_type,
     exp_subtyp: row?.exp_subtyp ?? DEFAULTS.exp_subtyp,
     location: row?.location ?? DEFAULTS.location,
@@ -71,7 +71,7 @@ export function ExpenseForm({
   const countries = useMemo(() => uniqueValues(rows, "country"), [rows]);
   const subtypes = useMemo(() => subtypesFor(rows, draft.exp_type), [rows, draft.exp_type]);
 
-  const amountValid = draft.abs_amt !== "" && !Number.isNaN(Number(draft.abs_amt));
+  const amountValid = draft.t_amt !== "" && !Number.isNaN(Number(draft.t_amt));
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -90,7 +90,8 @@ export function ExpenseForm({
       exclude: draft.exclude ? YES : NO,
       bad_choice: draft.bad_choice ? YES : NO,
       crcy: draft.crcy.trim() || DEFAULTS.crcy,
-      abs_amt: Number(draft.abs_amt),
+      abs_amt: Number(draft.t_amt),
+      t_amt: Number(draft.t_amt),
     });
   }
 
@@ -108,7 +109,7 @@ export function ExpenseForm({
           />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="abs_amt">Amount</Label>
+          <Label htmlFor="t_amt">Amount</Label>
           <div className="flex gap-2">
             <Input
               id="crcy"
@@ -119,15 +120,15 @@ export function ExpenseForm({
               aria-label="Currency"
             />
             <Input
-              id="abs_amt"
+              id="t_amt"
               className="numeric flex-1"
               type="number"
               step="0.01"
               min="0"
               inputMode="decimal"
               placeholder="0.00"
-              value={draft.abs_amt}
-              onChange={(e) => set("abs_amt", e.target.value)}
+              value={draft.t_amt}
+              onChange={(e) => set("t_amt", e.target.value)}
               required
             />
           </div>

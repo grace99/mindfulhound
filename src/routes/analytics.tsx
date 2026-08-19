@@ -94,7 +94,7 @@ function AnalyticsPage() {
   const weekdays = weekdaySeries(filtered);
   const bad = badChoiceTotal(filtered);
   const biggest = [...counted].sort(
-    (a, b) => Number(b.abs_amt ?? 0) - Number(a.abs_amt ?? 0),
+    (a, b) => amountOf(b) - amountOf(a),
   )[0];
 
   return (
@@ -174,7 +174,7 @@ function AnalyticsPage() {
         />
         <Stat
           label="Biggest single spend"
-          value={formatAmount(Number(biggest?.abs_amt ?? 0), biggest?.crcy ?? currency)}
+          value={formatAmount(biggest ? amountOf(biggest) : 0, biggest?.crcy ?? currency)}
           hint={biggest?.exp_desc ?? "—"}
           tone="accent"
         />
