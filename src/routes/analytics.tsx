@@ -78,6 +78,7 @@ function AnalyticsPage() {
   const [year, setYear] = useState<string>("");
 
   const years = useMemo(() => spendYearsIn(rows), [rows]);
+  const effYear = year || String(defaultSpendYear(rows));
   const types = useMemo(() => uniqueValues(rows, "exp_type"), [rows]);
   const locations = useMemo(() => uniqueValues(rows, "location"), [rows]);
 
@@ -91,7 +92,8 @@ function AnalyticsPage() {
         if (location !== "all" && (r.location ?? "") !== location) return false;
         return true;
       }),
-    [rows, year, from, to, type, location],
+    [rows, effYear, from, to, type, location],
+  );
   );
 
   const total = totalOf(filtered);
