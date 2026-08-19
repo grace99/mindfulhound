@@ -58,8 +58,9 @@ function Dashboard() {
   const { data: rows = [], isLoading, error } = useExpenses();
   const budgets = loadBudgets();
 
-  const [year, setYear] = useState(currentSpendYear());
+  const [pickedYear, setYear] = useState<number | null>(null);
   const years = spendYearsIn(rows);
+  const year = pickedYear ?? defaultSpendYear(rows);
   const yearRows = rows.filter((r) => inSpendYear(r, year));
 
   const thisMonth = currentMonthKey();
