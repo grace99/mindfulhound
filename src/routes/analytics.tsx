@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { useExpenses } from "@/lib/use-expenses";
 import {
   CHART_COLORS,
+  amountOf,
   badChoiceTotal,
   dailySeries,
   formatAmount,
@@ -28,6 +29,10 @@ import {
   monthlySeries,
   sumBy,
   todayISO,
+  spendYearLabel,
+  spendYearsIn,
+  inSpendYear,
+  currentSpendYear,
   totalOf,
   uniqueValues,
   weekdaySeries,

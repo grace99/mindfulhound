@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useDeleteExpense, useExpenses, useUpdateExpense } from "@/lib/use-expenses";
 import {
+  amountOf,
   formatAmount,
   formatDate,
   isFlagged,
