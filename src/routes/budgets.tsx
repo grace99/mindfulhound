@@ -40,7 +40,7 @@ export const Route = createFileRoute("/budgets")({
 
 function BudgetsPage() {
   const { data: rows = [] } = useExpenses();
-  const currency = rows[0]?.crcy ?? "INR";
+  const currency = "INR";
   const [budgets, setBudgets] = useState<Budgets>(emptyBudgets);
   const [saved, setSaved] = useState(false);
 

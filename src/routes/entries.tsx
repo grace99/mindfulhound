@@ -150,7 +150,7 @@ function EntriesPage() {
                   </td>
                   <td className="py-2.5 pr-3 text-muted-foreground">{r.location ?? "—"}</td>
                   <td className="numeric py-2.5 pr-3 text-right font-semibold">
-                    {formatAmount(amountOf(r), r.crcy ?? "INR")}
+                    {formatAmount(amountOf(r), "INR")}
                   </td>
                   <td className="py-2.5">
                     <div className="flex justify-end gap-1">

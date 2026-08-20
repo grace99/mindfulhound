@@ -59,7 +59,7 @@ function AddExpensePage() {
                       {r.exp_desc || r.exp_subtyp || "Untitled"}
                     </span>
                     <span className="numeric font-semibold">
-                      {formatAmount(amountOf(r), r.crcy ?? "INR")}
+                      {formatAmount(amountOf(r), "INR")}
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground">

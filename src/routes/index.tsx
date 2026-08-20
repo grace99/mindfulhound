@@ -73,7 +73,7 @@ function Dashboard() {
   const dayCount = new Set(monthRows.filter(isCounted).map((r) => r.tran_date)).size || 1;
   const trend = monthlySeries(yearRows).slice(-12);
   const byType = sumBy(monthRows.length ? monthRows : yearRows, (r) => r.exp_type ?? "");
-  const currency = rows[0]?.crcy ?? "INR";
+  const currency = "INR";
   const overBudget =
     budgets.overall > 0 && monthTotal > budgets.overall ? monthTotal - budgets.overall : 0;
 
@@ -282,7 +282,7 @@ function Dashboard() {
                 </p>
               </div>
               <span className="numeric shrink-0 font-semibold">
-                {formatAmount(amountOf(r), r.crcy ?? currency)}
+                {formatAmount(amountOf(r), currency)}
               </span>
             </li>
           ))}
