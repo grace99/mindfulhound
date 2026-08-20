@@ -157,15 +157,25 @@ export function formatDate(dateStr: string | null) {
 
 /* ------------------------------- data access ------------------------------ */
 
+const PAGE_SIZE = 1000;
+
+/** Fetches every row, paging around the API's per-request row cap. */
 export async function fetchExpenses(): Promise<Expense[]> {
-  const { data, error } = await supabase
-    .from(TABLE)
-    .select("*")
-    .order("tran_date", { ascending: false })
-    .order("uid", { ascending: false })
-    .limit(10000);
-  if (error) throw new Error(error.message);
-  return (data ?? []) as Expense[];
+  const all: Expense[] = [];
+  for (let page = 0; page < 50; page++) {
+    const from = page * PAGE_SIZE;
+    const { data, error } = await supabase
+      .from(TABLE)
+      .select("*")
+      .order("tran_date", { ascending: false })
+      .order("uid", { ascending: false })
+      .range(from, from + PAGE_SIZE - 1);
+    if (error) throw new Error(error.message);
+    const batch = (data ?? []) as Expense[];
+    all.push(...batch);
+    if (batch.length < PAGE_SIZE) break;
+  }
+  return all;
 }
 
 async function nextUid(): Promise<number> {
