@@ -128,29 +128,70 @@ function Dashboard() {
           hint={`${yearRows.length} entries`}
           tone="accent"
         />
-        <Stat
-          label="This month"
-          value={formatAmount(monthTotal, currency)}
-          hint={`${monthRows.length} entries`}
-          tone="primary"
-        />
-        <Stat
-          label="Today"
-          value={formatAmount(totalOf(todayRows), currency)}
-          hint={`${todayRows.length} entries`}
-        />
-        <Stat
-          label="Avg / active day"
-          value={formatAmount(monthTotal / dayCount, currency)}
-          hint="This month"
-          tone="accent"
-        />
-        <Stat
-          label="Bad choices"
-          value={formatAmount(badChoiceTotal(monthRows), currency)}
-          hint="Flagged this month"
-          tone="destructive"
-        />
+        {isCurrentYear ? (
+          <>
+            <Stat
+              label="This month"
+              value={formatAmount(monthTotal, currency)}
+              hint={`${monthRows.length} entries`}
+              tone="primary"
+            />
+            <Stat
+              label="Today"
+              value={formatAmount(totalOf(todayRows), currency)}
+              hint={`${todayRows.length} entries`}
+            />
+            <Stat
+              label="Avg / active day"
+              value={formatAmount(monthTotal / dayCount, currency)}
+              hint="This month"
+              tone="accent"
+            />
+            <Stat
+              label="Bad choices"
+              value={formatAmount(badChoiceTotal(monthRows), currency)}
+              hint="Flagged this month"
+              tone="destructive"
+            />
+          </>
+        ) : (
+          <>
+            <Stat
+              label="Avg / month"
+              value={formatAmount(yearTotal / yearMonthCount, currency)}
+              hint={`${yearMonthCount} months with spend`}
+              tone="primary"
+            />
+            <Stat
+              label="Avg / active day"
+              value={formatAmount(yearTotal / yearDayCount, currency)}
+              hint={`${yearDayCount} active days`}
+              tone="accent"
+            />
+            <Stat
+              label="Biggest month"
+              value={formatAmount(
+                trend.reduce(
+                  (best, m) => (Math.abs(m.total) > Math.abs(best) ? m.total : best),
+                  0,
+                ),
+                currency,
+              )}
+              hint={
+                trend.reduce(
+                  (best, m) => (Math.abs(m.total) > Math.abs(best.total) ? m : best),
+                  trend[0] ?? { label: "—", total: 0 },
+                ).label
+              }
+            />
+            <Stat
+              label="Bad choices"
+              value={formatAmount(badChoiceTotal(yearRows), currency)}
+              hint={`Flagged in ${spendYearLabel(year)}`}
+              tone="destructive"
+            />
+          </>
+        )}
       </div>
 
       {budgets.overall > 0 && (
