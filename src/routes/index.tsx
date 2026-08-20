@@ -19,6 +19,7 @@ import {
   CHART_COLORS,
   amountOf,
   defaultSpendYear,
+  spendYearOf,
   inSpendYear,
   spendYearLabel,
   spendYearsIn,
@@ -67,12 +68,23 @@ function Dashboard() {
   const monthRows = yearRows.filter((r) => monthKey(r.tran_date) === thisMonth);
   const today = todayISO();
   const todayRows = yearRows.filter((r) => r.tran_date === today);
+  const isCurrentYear = year === spendYearOf(today);
 
   const yearTotal = totalOf(yearRows);
   const monthTotal = totalOf(monthRows);
   const dayCount = new Set(monthRows.filter(isCounted).map((r) => r.tran_date)).size || 1;
   const trend = monthlySeries(yearRows).slice(-12);
-  const byType = sumBy(monthRows.length ? monthRows : yearRows, (r) => r.exp_type ?? "");
+  const yearDayCount = new Set(yearRows.filter(isCounted).map((r) => r.tran_date)).size || 1;
+  const yearMonthCount = trend.length || 1;
+  const catRows = isCurrentYear && monthRows.length ? monthRows : yearRows;
+  const byType = sumBy(catRows, (r) => r.exp_type ?? "")
+    .slice()
+    .sort((a, b) => a.total - b.total)
+    .slice(0, 25);
+  const pieData = byType
+    .slice()
+    .sort((a, b) => Math.abs(b.total) - Math.abs(a.total))
+    .slice(0, 6);
   const currency = "INR";
   const overBudget =
     budgets.overall > 0 && monthTotal > budgets.overall ? monthTotal - budgets.overall : 0;
@@ -116,29 +128,70 @@ function Dashboard() {
           hint={`${yearRows.length} entries`}
           tone="accent"
         />
-        <Stat
-          label="This month"
-          value={formatAmount(monthTotal, currency)}
-          hint={`${monthRows.length} entries`}
-          tone="primary"
-        />
-        <Stat
-          label="Today"
-          value={formatAmount(totalOf(todayRows), currency)}
-          hint={`${todayRows.length} entries`}
-        />
-        <Stat
-          label="Avg / active day"
-          value={formatAmount(monthTotal / dayCount, currency)}
-          hint="This month"
-          tone="accent"
-        />
-        <Stat
-          label="Bad choices"
-          value={formatAmount(badChoiceTotal(monthRows), currency)}
-          hint="Flagged this month"
-          tone="destructive"
-        />
+        {isCurrentYear ? (
+          <>
+            <Stat
+              label="This month"
+              value={formatAmount(monthTotal, currency)}
+              hint={`${monthRows.length} entries`}
+              tone="primary"
+            />
+            <Stat
+              label="Today"
+              value={formatAmount(totalOf(todayRows), currency)}
+              hint={`${todayRows.length} entries`}
+            />
+            <Stat
+              label="Avg / active day"
+              value={formatAmount(monthTotal / dayCount, currency)}
+              hint="This month"
+              tone="accent"
+            />
+            <Stat
+              label="Bad choices"
+              value={formatAmount(badChoiceTotal(monthRows), currency)}
+              hint="Flagged this month"
+              tone="destructive"
+            />
+          </>
+        ) : (
+          <>
+            <Stat
+              label="Avg / month"
+              value={formatAmount(yearTotal / yearMonthCount, currency)}
+              hint={`${yearMonthCount} months with spend`}
+              tone="primary"
+            />
+            <Stat
+              label="Avg / active day"
+              value={formatAmount(yearTotal / yearDayCount, currency)}
+              hint={`${yearDayCount} active days`}
+              tone="accent"
+            />
+            <Stat
+              label="Biggest month"
+              value={formatAmount(
+                trend.reduce(
+                  (best, m) => (Math.abs(m.total) > Math.abs(best) ? m.total : best),
+                  0,
+                ),
+                currency,
+              )}
+              hint={
+                trend.reduce(
+                  (best, m) => (Math.abs(m.total) > Math.abs(best.total) ? m : best),
+                  trend[0] ?? { label: "—", total: 0 },
+                ).label
+              }
+            />
+            <Stat
+              label="Bad choices"
+              value={formatAmount(badChoiceTotal(yearRows), currency)}
+              hint={`Flagged in ${spendYearLabel(year)}`}
+              tone="destructive"
+            />
+          </>
+        )}
       </div>
 
       {budgets.overall > 0 && (
@@ -216,7 +269,11 @@ function Dashboard() {
 
         <Panel
           title="Where it went"
-          description={monthRows.length ? "Categories this month" : `Categories in ${spendYearLabel(year)}`}
+          description={
+            isCurrentYear && monthRows.length
+              ? "Top 25 categories this month"
+              : `Top 25 categories in ${spendYearLabel(year)}`
+          }
           className="lg:col-span-2"
         >
           <div className="h-64">
@@ -228,15 +285,15 @@ function Dashboard() {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={byType.slice(0, 6)}
-                    dataKey="total"
+                    data={pieData.map((c) => ({ ...c, value: Math.abs(c.total) }))}
+                    dataKey="value"
                     nameKey="name"
                     innerRadius="55%"
                     outerRadius="82%"
                     paddingAngle={2}
                     stroke="none"
                   >
-                    {byType.slice(0, 6).map((_, i) => (
+                    {pieData.map((_, i) => (
                       <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                     ))}
                   </Pie>
@@ -248,8 +305,8 @@ function Dashboard() {
               </ResponsiveContainer>
             )}
           </div>
-          <ul className="mt-3 space-y-1.5 text-sm">
-            {byType.slice(0, 5).map((c, i) => (
+          <ul className="mt-3 max-h-64 space-y-1.5 overflow-y-auto pr-1 text-sm">
+            {byType.map((c, i) => (
               <li key={c.name} className="flex items-center gap-2">
                 <span
                   className="size-2.5 shrink-0 rounded-full"
