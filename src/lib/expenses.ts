@@ -40,7 +40,7 @@ export function isFlagged(value: string | null | undefined) {
 }
 
 /** Categories always kept out of spend analytics. */
-export const EXCLUDED_TYPES = ["business"];
+export const EXCLUDED_TYPES = ["business", "income"];
 
 /**
  * Analytics only counts rows where `exclude` is NULL/blank and the category is
