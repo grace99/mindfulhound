@@ -269,7 +269,11 @@ function Dashboard() {
 
         <Panel
           title="Where it went"
-          description={monthRows.length ? "Categories this month" : `Categories in ${spendYearLabel(year)}`}
+          description={
+            isCurrentYear && monthRows.length
+              ? "Top 25 categories this month"
+              : `Top 25 categories in ${spendYearLabel(year)}`
+          }
           className="lg:col-span-2"
         >
           <div className="h-64">
@@ -281,15 +285,15 @@ function Dashboard() {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={byType.slice(0, 6)}
-                    dataKey="total"
+                    data={pieData.map((c) => ({ ...c, value: Math.abs(c.total) }))}
+                    dataKey="value"
                     nameKey="name"
                     innerRadius="55%"
                     outerRadius="82%"
                     paddingAngle={2}
                     stroke="none"
                   >
-                    {byType.slice(0, 6).map((_, i) => (
+                    {pieData.map((_, i) => (
                       <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                     ))}
                   </Pie>
@@ -301,8 +305,8 @@ function Dashboard() {
               </ResponsiveContainer>
             )}
           </div>
-          <ul className="mt-3 space-y-1.5 text-sm">
-            {byType.slice(0, 5).map((c, i) => (
+          <ul className="mt-3 max-h-64 space-y-1.5 overflow-y-auto pr-1 text-sm">
+            {byType.map((c, i) => (
               <li key={c.name} className="flex items-center gap-2">
                 <span
                   className="size-2.5 shrink-0 rounded-full"
