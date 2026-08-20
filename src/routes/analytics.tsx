@@ -67,7 +67,7 @@ const tooltipStyle = {
 
 function AnalyticsPage() {
   const { data: rows = [] } = useExpenses();
-  const currency = rows[0]?.crcy ?? "INR";
+  const currency = "INR";
 
   const [from, setFrom] = useState("");
   const [to, setTo] = useState(todayISO());
@@ -199,7 +199,7 @@ function AnalyticsPage() {
         />
         <Stat
           label="Biggest single spend"
-          value={formatAmount(biggest ? amountOf(biggest) : 0, biggest?.crcy ?? currency)}
+          value={formatAmount(biggest ? amountOf(biggest) : 0, currency)}
           hint={biggest?.exp_desc ?? "—"}
           tone="accent"
         />
