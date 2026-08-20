@@ -67,12 +67,23 @@ function Dashboard() {
   const monthRows = yearRows.filter((r) => monthKey(r.tran_date) === thisMonth);
   const today = todayISO();
   const todayRows = yearRows.filter((r) => r.tran_date === today);
+  const isCurrentYear = year === spendYearOf(today);
 
   const yearTotal = totalOf(yearRows);
   const monthTotal = totalOf(monthRows);
   const dayCount = new Set(monthRows.filter(isCounted).map((r) => r.tran_date)).size || 1;
   const trend = monthlySeries(yearRows).slice(-12);
-  const byType = sumBy(monthRows.length ? monthRows : yearRows, (r) => r.exp_type ?? "");
+  const yearDayCount = new Set(yearRows.filter(isCounted).map((r) => r.tran_date)).size || 1;
+  const yearMonthCount = trend.length || 1;
+  const catRows = isCurrentYear && monthRows.length ? monthRows : yearRows;
+  const byType = sumBy(catRows, (r) => r.exp_type ?? "")
+    .slice()
+    .sort((a, b) => a.total - b.total)
+    .slice(0, 25);
+  const pieData = byType
+    .slice()
+    .sort((a, b) => Math.abs(b.total) - Math.abs(a.total))
+    .slice(0, 6);
   const currency = "INR";
   const overBudget =
     budgets.overall > 0 && monthTotal > budgets.overall ? monthTotal - budgets.overall : 0;
