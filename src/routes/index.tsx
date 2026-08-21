@@ -79,7 +79,7 @@ function Dashboard() {
   const catRows = isCurrentYear && monthRows.length ? monthRows : yearRows;
   const byType = sumBy(catRows, (r) => r.exp_type ?? "")
     .slice()
-    .sort((a, b) => a.total - b.total)
+    .sort((a, b) => b.total - a.total)
     .slice(0, 25);
   const pieData = byType
     .slice()
