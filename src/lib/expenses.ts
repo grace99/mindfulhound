@@ -43,10 +43,11 @@ export function isFlagged(value: string | null | undefined) {
 export const EXCLUDED_TYPES = ["business", "income"];
 
 /**
- * Analytics counts every row whose category is not one of the excluded ones
- * (e.g. BUSINESS, INCOME). The `exclude` flag no longer filters analytics.
+ * Analytics only counts rows where `exclude` is explicitly "No" and the
+ * category is not one of the excluded ones (e.g. BUSINESS, INCOME).
  */
 export function isCounted(row: Expense) {
+  if ((row.exclude ?? "").trim().toLowerCase() !== "no") return false;
   const t = (row.exp_type ?? "").trim().toLowerCase();
   return !EXCLUDED_TYPES.includes(t);
 }
