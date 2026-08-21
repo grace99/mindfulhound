@@ -65,11 +65,38 @@ export function ExpenseForm({
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) =>
     setDraft((d) => ({ ...d, [key]: value }));
 
-  const types = useMemo(() => uniqueValues(rows, "exp_type"), [rows]);
-  const locations = useMemo(() => uniqueValues(rows, "location"), [rows]);
-  const currencies = useMemo(() => uniqueValues(rows, "crcy"), [rows]);
-  const countries = useMemo(() => uniqueValues(rows, "country"), [rows]);
-  const subtypes = useMemo(() => subtypesFor(rows, draft.exp_type), [rows, draft.exp_type]);
+  const refTypes = useExpTypes();
+  const refLocations = useLocations();
+  const refCurrencies = useCurrencies();
+  const refCountries = useCountries();
+  const refSubtypes = useSubtypes();
+
+  const types = useMemo(
+    () => mergeOptions(refTypes.data, uniqueValues(rows, "exp_type")),
+    [refTypes.data, rows],
+  );
+  const locations = useMemo(
+    () => mergeOptions(refLocations.data, uniqueValues(rows, "location")),
+    [refLocations.data, rows],
+  );
+  const currencies = useMemo(
+    () => mergeOptions(refCurrencies.data, uniqueValues(rows, "crcy")),
+    [refCurrencies.data, rows],
+  );
+  const countries = useMemo(
+    () => mergeOptions(refCountries.data, uniqueValues(rows, "country")),
+    [refCountries.data, rows],
+  );
+  const subtypes = useMemo(() => {
+    const ref = refSubtypes.data ?? [];
+    const matched = ref.filter(
+      (s) => !s.parent || s.parent.trim().toLowerCase() === draft.exp_type.trim().toLowerCase(),
+    );
+    // No parent match (e.g. a brand-new category) → offer every sub-category.
+    const base = (matched.length > 0 ? matched : ref).map((s) => s.value);
+    return mergeOptions(base, subtypesFor(rows, draft.exp_type));
+  }, [refSubtypes.data, rows, draft.exp_type]);
+
 
   const amountValid = draft.t_amt !== "" && !Number.isNaN(Number(draft.t_amt));
 
