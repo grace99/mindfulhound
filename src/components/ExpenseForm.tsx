@@ -15,6 +15,14 @@ import {
   type Expense,
   type ExpenseInput,
 } from "@/lib/expenses";
+import { mergeOptions } from "@/lib/reference";
+import {
+  useCountries,
+  useCurrencies,
+  useExpTypes,
+  useLocations,
+  useSubtypes,
+} from "@/lib/use-reference";
 
 type Draft = {
   tran_date: string;
