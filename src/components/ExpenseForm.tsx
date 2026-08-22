@@ -127,7 +127,6 @@ export function ExpenseForm({
               className="numeric flex-1"
               type="number"
               step="0.01"
-              min="0"
               inputMode="decimal"
               placeholder="0.00"
               value={draft.t_amt}

@@ -269,6 +269,26 @@ export function monthlySeries(rows: Expense[]) {
     .map(([key, total]) => ({ key, label: formatMonth(key), total }));
 }
 
+/** Monthly income (exp_type = income) vs spend, both as positive magnitudes. */
+export function incomeVsSpendSeries(rows: Expense[]) {
+  const map = new Map<string, { income: number; spend: number }>();
+  for (const r of rows) {
+    if (!r.tran_date) continue;
+    if ((r.exclude ?? "").trim().toLowerCase() !== "no") continue;
+    const t = (r.exp_type ?? "").trim().toLowerCase();
+    if (t === "business") continue;
+    const k = monthKey(r.tran_date);
+    const entry = map.get(k) ?? { income: 0, spend: 0 };
+    const amt = Math.abs(amountOf(r));
+    if (t === "income") entry.income += amt;
+    else entry.spend += amt;
+    map.set(k, entry);
+  }
+  return [...map.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([key, v]) => ({ key, label: formatMonth(key), ...v }));
+}
+
 export function dailySeries(rows: Expense[]) {
   const map = new Map<string, number>();
   for (const r of rows) {

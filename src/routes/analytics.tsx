@@ -5,6 +5,7 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  Legend,
   Line,
   LineChart,
   Pie,
@@ -26,6 +27,7 @@ import {
   dailySeries,
   formatAmount,
   isCounted,
+  incomeVsSpendSeries,
   monthlySeries,
   sumBy,
   todayISO,
@@ -101,6 +103,7 @@ function AnalyticsPage() {
   const bySubtype = sumBy(filtered, (r) => r.exp_subtyp ?? "").slice(0, 10);
   const byLocation = sumBy(filtered, (r) => r.location ?? "").slice(0, 6);
   const weekdays = weekdaySeries(filtered);
+  const incomeSpend = useMemo(() => incomeVsSpendSeries(filtered), [filtered]);
   const bad = badChoiceTotal(filtered);
   const biggest = [...counted].sort(
     (a, b) => amountOf(b) - amountOf(a),
@@ -255,6 +258,41 @@ function AnalyticsPage() {
             </LineChart>
           </ResponsiveContainer>
         </div>
+      </Panel>
+
+      <Panel
+        title="Income vs spends"
+        description="Monthly totals, shown as magnitudes"
+        className="mt-5"
+      >
+        <div className="h-72">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={incomeSpend} margin={{ left: 4, right: 8, top: 8 }}>
+              <CartesianGrid stroke="var(--color-border)" vertical={false} />
+              <XAxis
+                dataKey="label"
+                tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
+                stroke="var(--color-border)"
+              />
+              <YAxis
+                tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
+                stroke="var(--color-border)"
+                width={54}
+                tickFormatter={(v: number) => (v >= 1000 ? `${Math.round(v / 1000)}k` : String(v))}
+              />
+              <Tooltip
+                contentStyle={tooltipStyle}
+                formatter={(v: number, name) => [formatAmount(v, currency), name]}
+              />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
+              <Bar name="Income" dataKey="income" fill="var(--color-chart-3)" radius={[6, 6, 0, 0]} />
+              <Bar name="Spends" dataKey="spend" fill="var(--color-chart-1)" radius={[6, 6, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+        {incomeSpend.length === 0 && (
+          <p className="text-sm text-muted-foreground">No data for these filters.</p>
+        )}
       </Panel>
 
       <div className="mt-5 grid gap-5 lg:grid-cols-2">
