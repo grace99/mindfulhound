@@ -76,6 +76,17 @@ const tooltipLabelStyle = {
   marginBottom: "4px",
 };
 
+type Drill =
+  | { kind: "month"; value: string; label: string }
+  | { kind: "day"; value: string; label: string }
+  | { kind: "type"; value: string; label: string }
+  | { kind: "subtype"; value: string; label: string }
+  | { kind: "location"; value: string; label: string }
+  | { kind: "weekday"; value: string; label: string }
+  | null;
+
+const DAY_ABBR = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
 function AnalyticsPage() {
   const { data: rows = [] } = useExpenses();
   const currency = "INR";
@@ -86,11 +97,13 @@ function AnalyticsPage() {
   const [location, setLocation] = useState("all");
   const [grain, setGrain] = useState<"day" | "month">("month");
   const [year, setYear] = useState<string>("");
+  const [drill, setDrill] = useState<Drill>(null);
 
   const years = useMemo(() => spendYearsIn(rows), [rows]);
   const effYear = year || String(defaultSpendYear(rows));
   const types = useMemo(() => uniqueValues(rows, "exp_type"), [rows]);
   const locations = useMemo(() => uniqueValues(rows, "location"), [rows]);
+
 
   const filtered = useMemo(
     () =>
