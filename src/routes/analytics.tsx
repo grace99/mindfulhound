@@ -131,6 +131,36 @@ function AnalyticsPage() {
     (a, b) => amountOf(b) - amountOf(a),
   )[0];
 
+  const drillRows = useMemo(() => {
+    if (!drill) return [];
+    const base = drill.kind === "month" || drill.kind === "day" ? filtered : counted;
+    return base
+      .filter((r) => {
+        switch (drill.kind) {
+          case "month":
+            return r.tran_date ? monthKey(r.tran_date) === drill.value : false;
+          case "day":
+            return (r.tran_date ?? "") === drill.value;
+          case "type":
+            return (r.exp_type ?? "") === drill.value;
+          case "subtype":
+            return (r.exp_subtyp ?? "") === drill.value;
+          case "location":
+            return (r.location ?? "") === drill.value;
+          case "weekday":
+            return r.tran_date
+              ? DAY_ABBR[new Date(`${r.tran_date}T00:00:00`).getDay()] === drill.value
+              : false;
+          default:
+            return false;
+        }
+      })
+      .sort((a, b) => (b.tran_date ?? "").localeCompare(a.tran_date ?? ""));
+  }, [drill, filtered, counted]);
+
+  const drillTotal = drillRows.reduce((acc, r) => acc + amountOf(r), 0);
+
+
   return (
     <AppShell title="Analytics" subtitle="Slice your spending any way you like.">
       <Panel className="mb-5">
