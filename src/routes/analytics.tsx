@@ -255,6 +255,8 @@ function AnalyticsPage() {
               />
               <Tooltip
                 contentStyle={tooltipStyle}
+                itemStyle={tooltipItemStyle}
+                labelStyle={tooltipLabelStyle}
                 formatter={(v: number) => formatAmount(v, currency)}
               />
               <Line
@@ -291,6 +293,8 @@ function AnalyticsPage() {
               />
               <Tooltip
                 contentStyle={tooltipStyle}
+                itemStyle={tooltipItemStyle}
+                labelStyle={tooltipLabelStyle}
                 formatter={(v: number, name) => [formatAmount(v, currency), name]}
               />
               <Legend wrapperStyle={{ fontSize: 12 }} />
@@ -324,6 +328,8 @@ function AnalyticsPage() {
                 />
                 <Tooltip
                   contentStyle={tooltipStyle}
+                  itemStyle={tooltipItemStyle}
+                  labelStyle={tooltipLabelStyle}
                   formatter={(v: number) => formatAmount(v, currency)}
                 />
                 <Bar dataKey="total" radius={[0, 6, 6, 0]}>
@@ -378,6 +384,8 @@ function AnalyticsPage() {
                 />
                 <Tooltip
                   contentStyle={tooltipStyle}
+                  itemStyle={tooltipItemStyle}
+                  labelStyle={tooltipLabelStyle}
                   formatter={(v: number) => formatAmount(v, currency)}
                 />
                 <Bar dataKey="total" fill="var(--color-chart-2)" radius={[6, 6, 0, 0]} />
@@ -403,6 +411,8 @@ function AnalyticsPage() {
                 </Pie>
                 <Tooltip
                   contentStyle={tooltipStyle}
+                  itemStyle={tooltipItemStyle}
+                  labelStyle={tooltipLabelStyle}
                   formatter={(v: number) => formatAmount(v, currency)}
                 />
               </PieChart>
