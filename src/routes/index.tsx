@@ -362,6 +362,15 @@ const tooltipStyle = {
   color: "var(--color-popover-foreground)",
 };
 
+const tooltipItemStyle = {
+  color: "var(--color-popover-foreground)",
+};
+
+const tooltipLabelStyle = {
+  color: "var(--color-popover-foreground)",
+  marginBottom: "4px",
+};
+
 function Skeleton() {
   return <div className="size-full animate-pulse rounded-lg bg-secondary/60" />;
 }
