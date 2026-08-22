@@ -29,7 +29,10 @@ import {
   isCounted,
   incomeVsSpendSeries,
   monthlySeries,
+  monthKey,
+  formatDate,
   sumBy,
+
   todayISO,
   spendYearLabel,
   spendYearsIn,
@@ -76,6 +79,17 @@ const tooltipLabelStyle = {
   marginBottom: "4px",
 };
 
+type Drill =
+  | { kind: "month"; value: string; label: string }
+  | { kind: "day"; value: string; label: string }
+  | { kind: "type"; value: string; label: string }
+  | { kind: "subtype"; value: string; label: string }
+  | { kind: "location"; value: string; label: string }
+  | { kind: "weekday"; value: string; label: string }
+  | null;
+
+const DAY_ABBR = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
 function AnalyticsPage() {
   const { data: rows = [] } = useExpenses();
   const currency = "INR";
@@ -86,11 +100,13 @@ function AnalyticsPage() {
   const [location, setLocation] = useState("all");
   const [grain, setGrain] = useState<"day" | "month">("month");
   const [year, setYear] = useState<string>("");
+  const [drill, setDrill] = useState<Drill>(null);
 
   const years = useMemo(() => spendYearsIn(rows), [rows]);
   const effYear = year || String(defaultSpendYear(rows));
   const types = useMemo(() => uniqueValues(rows, "exp_type"), [rows]);
   const locations = useMemo(() => uniqueValues(rows, "location"), [rows]);
+
 
   const filtered = useMemo(
     () =>
@@ -117,6 +133,36 @@ function AnalyticsPage() {
   const biggest = [...counted].sort(
     (a, b) => amountOf(b) - amountOf(a),
   )[0];
+
+  const drillRows = useMemo(() => {
+    if (!drill) return [];
+    const base = drill.kind === "month" || drill.kind === "day" ? filtered : counted;
+    return base
+      .filter((r) => {
+        switch (drill.kind) {
+          case "month":
+            return r.tran_date ? monthKey(r.tran_date) === drill.value : false;
+          case "day":
+            return (r.tran_date ?? "") === drill.value;
+          case "type":
+            return (r.exp_type ?? "") === drill.value;
+          case "subtype":
+            return (r.exp_subtyp ?? "") === drill.value;
+          case "location":
+            return (r.location ?? "") === drill.value;
+          case "weekday":
+            return r.tran_date
+              ? DAY_ABBR[new Date(`${r.tran_date}T00:00:00`).getDay()] === drill.value
+              : false;
+          default:
+            return false;
+        }
+      })
+      .sort((a, b) => (b.tran_date ?? "").localeCompare(a.tran_date ?? ""));
+  }, [drill, filtered, counted]);
+
+  const drillTotal = drillRows.reduce((acc, r) => acc + amountOf(r), 0);
+
 
   return (
     <AppShell title="Analytics" subtitle="Slice your spending any way you like.">
@@ -240,7 +286,20 @@ function AnalyticsPage() {
       >
         <div className="h-72">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={trend} margin={{ left: 4, right: 8, top: 8 }}>
+            <LineChart
+              data={trend}
+              margin={{ left: 4, right: 8, top: 8 }}
+              onClick={(e: any) => {
+                const p = e?.activePayload?.[0]?.payload;
+                if (!p) return;
+                setDrill({
+                  kind: grain === "month" ? "month" : "day",
+                  value: p.key,
+                  label: grain === "month" ? p.label : formatDate(p.key),
+                });
+              }}
+              style={{ cursor: "pointer" }}
+            >
               <CartesianGrid stroke="var(--color-border)" vertical={false} />
               <XAxis
                 dataKey="label"
@@ -278,7 +337,15 @@ function AnalyticsPage() {
       >
         <div className="h-72">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={incomeSpend} margin={{ left: 4, right: 8, top: 8 }}>
+            <BarChart
+              data={incomeSpend}
+              margin={{ left: 4, right: 8, top: 8 }}
+              onClick={(e: any) => {
+                const p = e?.activePayload?.[0]?.payload;
+                if (p) setDrill({ kind: "month", value: p.key, label: p.label });
+              }}
+              style={{ cursor: "pointer" }}
+            >
               <CartesianGrid stroke="var(--color-border)" vertical={false} />
               <XAxis
                 dataKey="label"
@@ -332,11 +399,19 @@ function AnalyticsPage() {
                   labelStyle={tooltipLabelStyle}
                   formatter={(v: number) => formatAmount(v, currency)}
                 />
-                <Bar dataKey="total" radius={[0, 6, 6, 0]}>
+                <Bar
+                  dataKey="total"
+                  radius={[0, 6, 6, 0]}
+                  cursor="pointer"
+                  onClick={(d: any) =>
+                    setDrill({ kind: "type", value: d?.payload?.name, label: d?.payload?.name })
+                  }
+                >
                   {byType.slice(0, 8).map((_, i) => (
                     <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                   ))}
                 </Bar>
+
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -346,19 +421,28 @@ function AnalyticsPage() {
           <ul className="space-y-2">
             {bySubtype.map((s) => (
               <li key={s.name} className="text-sm">
-                <div className="flex items-center gap-2">
-                  <span className="min-w-0 flex-1 truncate text-muted-foreground">{s.name}</span>
-                  <span className="numeric font-semibold">{formatAmount(s.total, currency)}</span>
-                </div>
-                <div className="mt-1 h-1.5 rounded-full bg-secondary">
-                  <div
-                    className="h-full rounded-full bg-primary"
-                    style={{
-                      width: `${bySubtype[0] ? (s.total / bySubtype[0].total) * 100 : 0}%`,
-                    }}
-                  />
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setDrill({ kind: "subtype", value: s.name, label: s.name })}
+                  className="w-full text-left"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="min-w-0 flex-1 truncate text-muted-foreground hover:text-foreground">
+                      {s.name}
+                    </span>
+                    <span className="numeric font-semibold">{formatAmount(s.total, currency)}</span>
+                  </div>
+                  <div className="mt-1 h-1.5 rounded-full bg-secondary">
+                    <div
+                      className="h-full rounded-full bg-primary"
+                      style={{
+                        width: `${bySubtype[0] ? (s.total / bySubtype[0].total) * 100 : 0}%`,
+                      }}
+                    />
+                  </div>
+                </button>
               </li>
+
             ))}
             {bySubtype.length === 0 && (
               <li className="text-sm text-muted-foreground">No data for these filters.</li>
