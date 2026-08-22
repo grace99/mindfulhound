@@ -26,6 +26,7 @@ import {
   dailySeries,
   formatAmount,
   isCounted,
+  incomeVsSpendSeries,
   monthlySeries,
   sumBy,
   todayISO,
