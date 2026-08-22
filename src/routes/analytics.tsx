@@ -421,19 +421,28 @@ function AnalyticsPage() {
           <ul className="space-y-2">
             {bySubtype.map((s) => (
               <li key={s.name} className="text-sm">
-                <div className="flex items-center gap-2">
-                  <span className="min-w-0 flex-1 truncate text-muted-foreground">{s.name}</span>
-                  <span className="numeric font-semibold">{formatAmount(s.total, currency)}</span>
-                </div>
-                <div className="mt-1 h-1.5 rounded-full bg-secondary">
-                  <div
-                    className="h-full rounded-full bg-primary"
-                    style={{
-                      width: `${bySubtype[0] ? (s.total / bySubtype[0].total) * 100 : 0}%`,
-                    }}
-                  />
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setDrill({ kind: "subtype", value: s.name, label: s.name })}
+                  className="w-full text-left"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="min-w-0 flex-1 truncate text-muted-foreground hover:text-foreground">
+                      {s.name}
+                    </span>
+                    <span className="numeric font-semibold">{formatAmount(s.total, currency)}</span>
+                  </div>
+                  <div className="mt-1 h-1.5 rounded-full bg-secondary">
+                    <div
+                      className="h-full rounded-full bg-primary"
+                      style={{
+                        width: `${bySubtype[0] ? (s.total / bySubtype[0].total) * 100 : 0}%`,
+                      }}
+                    />
+                  </div>
+                </button>
               </li>
+
             ))}
             {bySubtype.length === 0 && (
               <li className="text-sm text-muted-foreground">No data for these filters.</li>
