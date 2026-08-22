@@ -102,6 +102,7 @@ function AnalyticsPage() {
   const bySubtype = sumBy(filtered, (r) => r.exp_subtyp ?? "").slice(0, 10);
   const byLocation = sumBy(filtered, (r) => r.location ?? "").slice(0, 6);
   const weekdays = weekdaySeries(filtered);
+  const incomeSpend = useMemo(() => incomeVsSpendSeries(filtered), [filtered]);
   const bad = badChoiceTotal(filtered);
   const biggest = [...counted].sort(
     (a, b) => amountOf(b) - amountOf(a),
