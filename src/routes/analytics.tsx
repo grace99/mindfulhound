@@ -67,6 +67,15 @@ const tooltipStyle = {
   color: "var(--color-popover-foreground)",
 };
 
+const tooltipItemStyle = {
+  color: "var(--color-popover-foreground)",
+};
+
+const tooltipLabelStyle = {
+  color: "var(--color-popover-foreground)",
+  marginBottom: "4px",
+};
+
 function AnalyticsPage() {
   const { data: rows = [] } = useExpenses();
   const currency = "INR";
