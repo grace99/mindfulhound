@@ -399,11 +399,19 @@ function AnalyticsPage() {
                   labelStyle={tooltipLabelStyle}
                   formatter={(v: number) => formatAmount(v, currency)}
                 />
-                <Bar dataKey="total" radius={[0, 6, 6, 0]}>
+                <Bar
+                  dataKey="total"
+                  radius={[0, 6, 6, 0]}
+                  cursor="pointer"
+                  onClick={(d: any) =>
+                    setDrill({ kind: "type", value: d?.payload?.name, label: d?.payload?.name })
+                  }
+                >
                   {byType.slice(0, 8).map((_, i) => (
                     <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                   ))}
                 </Bar>
+
               </BarChart>
             </ResponsiveContainer>
           </div>
