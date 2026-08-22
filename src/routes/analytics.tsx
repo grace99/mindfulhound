@@ -337,7 +337,15 @@ function AnalyticsPage() {
       >
         <div className="h-72">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={incomeSpend} margin={{ left: 4, right: 8, top: 8 }}>
+            <BarChart
+              data={incomeSpend}
+              margin={{ left: 4, right: 8, top: 8 }}
+              onClick={(e: any) => {
+                const p = e?.activePayload?.[0]?.payload;
+                if (p) setDrill({ kind: "month", value: p.key, label: p.label });
+              }}
+              style={{ cursor: "pointer" }}
+            >
               <CartesianGrid stroke="var(--color-border)" vertical={false} />
               <XAxis
                 dataKey="label"
