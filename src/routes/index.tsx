@@ -252,6 +252,8 @@ function Dashboard() {
                   />
                   <Tooltip
                     contentStyle={tooltipStyle}
+                    itemStyle={tooltipItemStyle}
+                    labelStyle={tooltipLabelStyle}
                     formatter={(v: number) => formatAmount(v, currency)}
                   />
                   <Area
@@ -299,6 +301,8 @@ function Dashboard() {
                   </Pie>
                   <Tooltip
                     contentStyle={tooltipStyle}
+                    itemStyle={tooltipItemStyle}
+                    labelStyle={tooltipLabelStyle}
                     formatter={(v: number) => formatAmount(v, currency)}
                   />
                 </PieChart>
