@@ -286,7 +286,20 @@ function AnalyticsPage() {
       >
         <div className="h-72">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={trend} margin={{ left: 4, right: 8, top: 8 }}>
+            <LineChart
+              data={trend}
+              margin={{ left: 4, right: 8, top: 8 }}
+              onClick={(e: any) => {
+                const p = e?.activePayload?.[0]?.payload;
+                if (!p) return;
+                setDrill({
+                  kind: grain === "month" ? "month" : "day",
+                  value: p.key,
+                  label: grain === "month" ? p.label : formatDate(p.key),
+                });
+              }}
+              style={{ cursor: "pointer" }}
+            >
               <CartesianGrid stroke="var(--color-border)" vertical={false} />
               <XAxis
                 dataKey="label"
