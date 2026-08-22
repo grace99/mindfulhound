@@ -252,6 +252,8 @@ function Dashboard() {
                   />
                   <Tooltip
                     contentStyle={tooltipStyle}
+                    itemStyle={tooltipItemStyle}
+                    labelStyle={tooltipLabelStyle}
                     formatter={(v: number) => formatAmount(v, currency)}
                   />
                   <Area
@@ -299,6 +301,8 @@ function Dashboard() {
                   </Pie>
                   <Tooltip
                     contentStyle={tooltipStyle}
+                    itemStyle={tooltipItemStyle}
+                    labelStyle={tooltipLabelStyle}
                     formatter={(v: number) => formatAmount(v, currency)}
                   />
                 </PieChart>
@@ -360,6 +364,15 @@ const tooltipStyle = {
   borderRadius: "10px",
   fontSize: "12px",
   color: "var(--color-popover-foreground)",
+};
+
+const tooltipItemStyle = {
+  color: "var(--color-popover-foreground)",
+};
+
+const tooltipLabelStyle = {
+  color: "var(--color-popover-foreground)",
+  marginBottom: "4px",
 };
 
 function Skeleton() {
