@@ -35,11 +35,12 @@ export function Panel({
   children,
   className = "",
 }: {
-  title?: string;
-  description?: string;
-  actions?: ReactNode;
+  title?: string | undefined;
+  description?: string | undefined;
+  actions?: ReactNode | undefined;
   children: ReactNode;
-  className?: string;
+  className?: string | undefined;
+
 }) {
   return (
     <section className={`panel p-5 ${className}`}>
