@@ -19,6 +19,13 @@ import { AppShell } from "@/components/AppShell";
 import { Panel, Stat } from "@/components/Stat";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useExpenses } from "@/lib/use-expenses";
 import {
   CHART_COLORS,
