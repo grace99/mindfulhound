@@ -520,18 +520,82 @@ function AnalyticsPage() {
           </div>
           <ul className="mt-3 grid gap-1.5 text-sm sm:grid-cols-2">
             {byLocation.map((c, i) => (
-              <li key={c.name} className="flex items-center gap-2">
-                <span
-                  className="size-2.5 shrink-0 rounded-full"
-                  style={{ background: CHART_COLORS[i % CHART_COLORS.length] }}
-                />
-                <span className="truncate text-muted-foreground">{c.name}</span>
-                <span className="numeric ml-auto">{formatAmount(c.total, currency)}</span>
+              <li key={c.name}>
+                <button
+                  type="button"
+                  onClick={() => setDrill({ kind: "location", value: c.name, label: c.name })}
+                  className="flex w-full items-center gap-2 text-left hover:text-foreground"
+                >
+                  <span
+                    className="size-2.5 shrink-0 rounded-full"
+                    style={{ background: CHART_COLORS[i % CHART_COLORS.length] }}
+                  />
+                  <span className="truncate text-muted-foreground">{c.name}</span>
+                  <span className="numeric ml-auto">{formatAmount(c.total, currency)}</span>
+                </button>
               </li>
             ))}
           </ul>
         </Panel>
       </div>
+
+      <Panel
+        title={drill ? `Transactions — ${drill.label}` : "Transactions"}
+        description={
+          drill
+            ? `${drillRows.length} entries · ${formatAmount(drillTotal, currency)}`
+            : "Click any bar, line point, slice or list row above to drill down."
+        }
+        className="mt-5"
+        actions={
+          drill ? (
+            <Button variant="ghost" onClick={() => setDrill(null)}>
+              Clear
+            </Button>
+          ) : undefined
+        }
+      >
+        {drill ? (
+          drillRows.length ? (
+            <div className="max-h-96 overflow-auto">
+              <table className="w-full text-sm">
+                <thead className="sticky top-0 bg-card text-xs text-muted-foreground">
+                  <tr className="border-b border-border">
+                    <th className="py-2 text-left font-medium">Date</th>
+                    <th className="py-2 text-left font-medium">Description</th>
+                    <th className="py-2 text-left font-medium">Category</th>
+                    <th className="py-2 text-left font-medium">Place</th>
+                    <th className="py-2 text-right font-medium">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {drillRows.map((r) => (
+                    <tr key={r.uid} className="border-b border-border/60">
+                      <td className="py-2 whitespace-nowrap text-muted-foreground">
+                        {formatDate(r.tran_date)}
+                      </td>
+                      <td className="py-2 pr-3">{r.exp_desc ?? "—"}</td>
+                      <td className="py-2 pr-3 text-muted-foreground">
+                        {r.exp_type ?? "—"}
+                        {r.exp_subtyp ? ` · ${r.exp_subtyp}` : ""}
+                      </td>
+                      <td className="py-2 pr-3 text-muted-foreground">{r.location ?? "—"}</td>
+                      <td className="numeric py-2 text-right font-semibold">
+                        {formatAmount(amountOf(r), currency)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">No matching entries.</p>
+          )
+        ) : (
+          <p className="text-sm text-muted-foreground">Nothing selected yet.</p>
+        )}
+      </Panel>
+
     </AppShell>
   );
 }
