@@ -496,6 +496,14 @@ function AnalyticsPage() {
                   nameKey="name"
                   outerRadius="80%"
                   stroke="none"
+                  cursor="pointer"
+                  onClick={(d: any) =>
+                    setDrill({
+                      kind: "location",
+                      value: d?.payload?.name ?? d?.name,
+                      label: d?.payload?.name ?? d?.name,
+                    })
+                  }
                 >
                   {byLocation.map((_, i) => (
                     <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
