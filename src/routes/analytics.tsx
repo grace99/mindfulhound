@@ -472,7 +472,15 @@ function AnalyticsPage() {
                   labelStyle={tooltipLabelStyle}
                   formatter={(v: number) => formatAmount(v, currency)}
                 />
-                <Bar dataKey="total" fill="var(--color-chart-2)" radius={[6, 6, 0, 0]} />
+                <Bar
+                  dataKey="total"
+                  fill="var(--color-chart-2)"
+                  radius={[6, 6, 0, 0]}
+                  cursor="pointer"
+                  onClick={(d: any) =>
+                    setDrill({ kind: "weekday", value: d?.payload?.name, label: d?.payload?.name })
+                  }
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
