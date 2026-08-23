@@ -54,7 +54,7 @@ export function ExpenseForm({
   onCancel,
 }: {
   rows: Expense[];
-  initial?: Expense;
+  initial?: Expense | undefined;
   submitLabel?: string;
   pending?: boolean;
   error?: string | null;
