@@ -389,7 +389,7 @@ function AnalyticsPage() {
               <BarChart data={byType.slice(0, 8)} layout="vertical" margin={{ left: 8, right: 16 }}>
                 <XAxis
                   type="number"
-                  tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
+                  tick={{ fontSize: 14, fill: "var(--color-muted-foreground)" }}
                   stroke="var(--color-border)"
                   tickFormatter={(v: number) => (v >= 1000 ? `${Math.round(v / 1000)}k` : String(v))}
                 />
@@ -397,7 +397,7 @@ function AnalyticsPage() {
                   type="category"
                   dataKey="name"
                   width={130}
-                  tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
+                  tick={{ fontSize: 14, fill: "var(--color-muted-foreground)" }}
                   stroke="var(--color-border)"
                 />
                 <Tooltip
