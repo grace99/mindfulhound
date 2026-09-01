@@ -105,6 +105,49 @@
   color-scheme: dark;
 }
 
+/* Light theme — same warm palette, inverted surfaces. */
+.light {
+  color-scheme: light;
+  --background: oklch(0.985 0.008 80);
+  --foreground: oklch(0.24 0.02 62);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.24 0.02 62);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.24 0.02 62);
+  --primary: oklch(0.68 0.16 55);
+  --primary-foreground: oklch(0.99 0.005 80);
+  --secondary: oklch(0.94 0.014 80);
+  --secondary-foreground: oklch(0.28 0.02 62);
+  --muted: oklch(0.95 0.01 80);
+  --muted-foreground: oklch(0.5 0.02 70);
+  --accent: oklch(0.62 0.1 192);
+  --accent-foreground: oklch(0.99 0.005 80);
+  --destructive: oklch(0.56 0.2 25);
+  --destructive-foreground: oklch(0.99 0.005 80);
+  --success: oklch(0.58 0.13 155);
+  --success-foreground: oklch(0.99 0.005 80);
+  --warning: oklch(0.72 0.14 80);
+  --warning-foreground: oklch(0.22 0.03 60);
+  --border: oklch(0.89 0.012 80);
+  --input: oklch(0.88 0.012 80);
+  --ring: oklch(0.68 0.16 55);
+  --chart-1: oklch(0.66 0.17 55);
+  --chart-2: oklch(0.6 0.11 192);
+  --chart-3: oklch(0.58 0.14 155);
+  --chart-4: oklch(0.58 0.18 20);
+  --chart-5: oklch(0.6 0.14 320);
+  --chart-6: oklch(0.7 0.14 105);
+  --sidebar: oklch(0.97 0.01 80);
+  --sidebar-foreground: oklch(0.24 0.02 62);
+  --sidebar-primary: oklch(0.68 0.16 55);
+  --sidebar-primary-foreground: oklch(0.99 0.005 80);
+  --sidebar-accent: oklch(0.94 0.014 80);
+  --sidebar-accent-foreground: oklch(0.24 0.02 62);
+  --sidebar-border: oklch(0.89 0.012 80);
+  --sidebar-ring: oklch(0.68 0.16 55);
+  --shadow-panel: 0 1px 2px 0 oklch(0 0 0 / 5%), 0 12px 28px -20px oklch(0 0 0 / 25%);
+}
+
 @layer base {
   * {
     border-color: var(--color-border);
@@ -112,6 +155,10 @@
 
   html {
     color-scheme: dark;
+  }
+
+  html.light {
+    color-scheme: light;
   }
 
   body {
@@ -125,6 +172,15 @@
       ),
       radial-gradient(50rem 26rem at 92% 0%, oklch(0.74 0.1 192 / 8%), transparent 70%);
     background-attachment: fixed;
+  }
+
+  html.light body {
+    background-image: radial-gradient(
+        60rem 30rem at 12% -8%,
+        oklch(0.68 0.16 55 / 10%),
+        transparent 70%
+      ),
+      radial-gradient(50rem 26rem at 92% 0%, oklch(0.62 0.1 192 / 8%), transparent 70%);
   }
 
   h1,
