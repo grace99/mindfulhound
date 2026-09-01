@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import { AppShell } from "@/components/AppShell";
 import { Panel, Stat } from "@/components/Stat";
+import { TransactionsModal } from "@/components/TransactionsModal";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useExpenses } from "@/lib/use-expenses";
@@ -28,13 +29,16 @@ import {
   formatAmount,
   formatDate,
   isCounted,
+  isFlagged,
   loadBudgets,
   monthKey,
   monthlySeries,
   sumBy,
   todayISO,
   totalOf,
+  type Expense,
 } from "@/lib/expenses";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
