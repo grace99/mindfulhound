@@ -359,3 +359,34 @@ export function saveBudgets(b: Budgets) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(BUDGET_KEY, JSON.stringify(b));
 }
+
+/* --------------------------- spend-year month list ------------------------ */
+
+const MONTH_ABBR = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
+
+/** The 12 calendar months of spend year `n` (Aug → Jul) with range bounds. */
+export function spendYearMonths(n: number) {
+  const startYear = SPEND_YEAR_BASE + n - 1;
+  return Array.from({ length: 12 }, (_, i) => {
+    const m = ((7 + i) % 12) + 1;
+    const y = startYear + (7 + i >= 12 ? 1 : 0);
+    const pad = String(m).padStart(2, "0");
+    const last = new Date(Date.UTC(y, m, 0)).getUTCDate();
+    return {
+      key: `${y}-${pad}`,
+      label: `${MONTH_ABBR[m - 1]} ${String(y).slice(2)}`,
+      from: `${y}-${pad}-01`,
+      to: `${y}-${pad}-${String(last).padStart(2, "0")}`,
+    };
+  });
+}
+
+/** Number of distinct days with counted activity. */
+export function activeDayCount(rows: Expense[]) {
+  const set = new Set<string>();
+  for (const r of rows) if (isCounted(r) && r.tran_date) set.add(r.tran_date);
+  return set.size;
+}
