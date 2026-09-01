@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { isSupabaseConfigured } from "@/lib/supabase";
-import { BarChart3, ListOrdered, PiggyBank, PlusCircle, Wallet } from "lucide-react";
+import { BarChart3, ListOrdered, Moon, PiggyBank, PlusCircle, Sun, Wallet } from "lucide-react";
+import { useTheme } from "@/lib/use-theme";
 
 const NAV = [
   { to: "/", label: "Dashboard", icon: Wallet },
@@ -22,6 +23,8 @@ export function AppShell({
   actions?: ReactNode;
   children: ReactNode;
 }) {
+  const { theme, toggle } = useTheme();
+
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-30 border-b border-border/70 bg-background/85 backdrop-blur">
@@ -46,6 +49,16 @@ export function AppShell({
               </Link>
             ))}
           </nav>
+          <button
+            type="button"
+            onClick={toggle}
+            aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+            title={theme === "dark" ? "Light theme" : "Dark theme"}
+            className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+          >
+            {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
+            <span className="hidden sm:inline">{theme === "dark" ? "Light" : "Dark"}</span>
+          </button>
         </div>
       </header>
 

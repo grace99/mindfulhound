@@ -34,6 +34,8 @@ import {
   dailySeries,
   formatAmount,
   isCounted,
+  activeDayCount,
+  spendYearMonths,
   incomeVsSpendSeries,
   monthlySeries,
   monthKey,
@@ -111,6 +113,11 @@ function AnalyticsPage() {
 
   const years = useMemo(() => spendYearsIn(rows), [rows]);
   const effYear = year || String(defaultSpendYear(rows));
+  const months = useMemo(
+    () => (effYear === "all" ? [] : spendYearMonths(Number(effYear))),
+    [effYear],
+  );
+  const activeMonth = months.find((m) => m.from === from && m.to === to)?.key ?? null;
   const types = useMemo(() => uniqueValues(rows, "exp_type"), [rows]);
   const locations = useMemo(() => uniqueValues(rows, "location"), [rows]);
 
@@ -130,6 +137,7 @@ function AnalyticsPage() {
 
   const total = totalOf(filtered);
   const counted = filtered.filter(isCounted);
+  const activeDays = activeDayCount(filtered);
   const trend = grain === "month" ? monthlySeries(filtered) : dailySeries(filtered).slice(-60);
   const byType = sumBy(filtered, (r) => r.exp_type ?? "");
   const bySubtype = sumBy(filtered, (r) => r.exp_subtyp ?? "").slice(0, 10);
@@ -243,6 +251,43 @@ function AnalyticsPage() {
             </Button>
           </div>
         </div>
+
+        {months.length > 0 && (
+          <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-border pt-3">
+            <span className="mr-1 text-xs text-muted-foreground">Months</span>
+            <button
+              type="button"
+              onClick={() => {
+                setFrom("");
+                setTo("");
+              }}
+              className={`rounded-md px-2.5 py-1 text-xs transition-colors ${
+                !activeMonth
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Full year
+            </button>
+            {months.map((m) => (
+              <button
+                key={m.key}
+                type="button"
+                onClick={() => {
+                  setFrom(m.from);
+                  setTo(m.to);
+                }}
+                className={`rounded-md px-2.5 py-1 text-xs transition-colors ${
+                  activeMonth === m.key
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-secondary text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
+        )}
       </Panel>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -253,8 +298,9 @@ function AnalyticsPage() {
           tone="primary"
         />
         <Stat
-          label="Average ticket"
-          value={formatAmount(counted.length ? total / counted.length : 0, currency)}
+          label="Avg / active day"
+          value={formatAmount(activeDays ? total / activeDays : 0, currency)}
+          hint={`${activeDays} active days`}
         />
         <Stat
           label="Bad-choice share"
