@@ -347,13 +347,19 @@ function Dashboard() {
           </div>
           <ul className="mt-3 max-h-64 space-y-1.5 overflow-y-auto pr-1 text-sm">
             {byType.map((c, i) => (
-              <li key={c.name} className="flex items-center gap-2">
-                <span
-                  className="size-2.5 shrink-0 rounded-full"
-                  style={{ background: CHART_COLORS[i % CHART_COLORS.length] }}
-                />
-                <span className="truncate text-muted-foreground">{c.name}</span>
-                <span className="numeric ml-auto">{formatAmount(c.total, currency)}</span>
+              <li key={c.name}>
+                <button
+                  type="button"
+                  onClick={() => openType(c.name)}
+                  className="flex w-full items-center gap-2 rounded-md px-1 py-0.5 text-left hover:bg-secondary"
+                >
+                  <span
+                    className="size-2.5 shrink-0 rounded-full"
+                    style={{ background: CHART_COLORS[i % CHART_COLORS.length] }}
+                  />
+                  <span className="truncate text-muted-foreground">{c.name}</span>
+                  <span className="numeric ml-auto">{formatAmount(c.total, currency)}</span>
+                </button>
               </li>
             ))}
           </ul>
