@@ -328,6 +328,8 @@ function Dashboard() {
                     outerRadius="82%"
                     paddingAngle={2}
                     stroke="none"
+                    style={{ cursor: "pointer" }}
+                    onClick={(d: { name?: string }) => d?.name && openType(d.name)}
                   >
                     {pieData.map((_, i) => (
                       <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
