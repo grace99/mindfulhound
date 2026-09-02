@@ -64,6 +64,7 @@ function Dashboard() {
   const budgets = loadBudgets();
 
   const [pickedYear, setYear] = useState<number | null>(null);
+  const [drill, setDrill] = useState<{ label: string; rows: Expense[] } | null>(null);
   const years = spendYearsIn(rows);
   const year = pickedYear ?? defaultSpendYear(rows);
   const yearRows = rows.filter((r) => inSpendYear(r, year));
@@ -81,6 +82,7 @@ function Dashboard() {
   const yearDayCount = new Set(yearRows.filter(isCounted).map((r) => r.tran_date)).size || 1;
   const yearMonthCount = trend.length || 1;
   const catRows = isCurrentYear && monthRows.length ? monthRows : yearRows;
+  const catLabel = isCurrentYear && monthRows.length ? "this month" : spendYearLabel(year);
   const byType = sumBy(catRows, (r) => r.exp_type ?? "")
     .slice()
     .sort((a, b) => b.total - a.total)
@@ -92,6 +94,18 @@ function Dashboard() {
   const currency = "INR";
   const overBudget =
     budgets.overall > 0 && monthTotal > budgets.overall ? monthTotal - budgets.overall : 0;
+
+  const counted = (rs: Expense[]) => rs.filter(isCounted);
+  const open = (label: string, rs: Expense[]) => setDrill({ label, rows: counted(rs) });
+  const biggestMonth = trend.reduce(
+    (best, m) => (Math.abs(m.total) > Math.abs(best.total) ? m : best),
+    trend[0] ?? { key: "", label: "—", total: 0 },
+  );
+  const openMonthKey = (key: string, label: string) =>
+    open(label, yearRows.filter((r) => monthKey(r.tran_date) === key));
+  const openType = (name: string) =>
+    open(`${name} · ${catLabel}`, catRows.filter((r) => (r.exp_type ?? "") === name));
+
 
   return (
     <AppShell
