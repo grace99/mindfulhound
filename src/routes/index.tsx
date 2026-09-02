@@ -145,6 +145,7 @@ function Dashboard() {
           value={formatAmount(yearTotal, currency)}
           hint={`${yearRows.length} entries`}
           tone="accent"
+          onClick={() => open(`Year ${spendYearLabel(year)}`, yearRows)}
         />
         {isCurrentYear ? (
           <>
@@ -153,23 +154,32 @@ function Dashboard() {
               value={formatAmount(monthTotal, currency)}
               hint={`${monthRows.length} entries`}
               tone="primary"
+              onClick={() => open("This month", monthRows)}
             />
             <Stat
               label="Today"
               value={formatAmount(totalOf(todayRows), currency)}
               hint={`${todayRows.length} entries`}
+              onClick={() => open(formatDate(today), todayRows)}
             />
             <Stat
               label="Avg / active day"
               value={formatAmount(monthTotal / dayCount, currency)}
               hint="This month"
               tone="accent"
+              onClick={() => open("This month", monthRows)}
             />
             <Stat
               label="Bad choices"
               value={formatAmount(badChoiceTotal(monthRows), currency)}
               hint="Flagged this month"
               tone="destructive"
+              onClick={() =>
+                open(
+                  "Bad choices · this month",
+                  monthRows.filter((r) => isFlagged(r.bad_choice)),
+                )
+              }
             />
           </>
         ) : (
@@ -179,34 +189,32 @@ function Dashboard() {
               value={formatAmount(yearTotal / yearMonthCount, currency)}
               hint={`${yearMonthCount} months with spend`}
               tone="primary"
+              onClick={() => open(`Year ${spendYearLabel(year)}`, yearRows)}
             />
             <Stat
               label="Avg / active day"
               value={formatAmount(yearTotal / yearDayCount, currency)}
               hint={`${yearDayCount} active days`}
               tone="accent"
+              onClick={() => open(`Year ${spendYearLabel(year)}`, yearRows)}
             />
             <Stat
               label="Biggest month"
-              value={formatAmount(
-                trend.reduce(
-                  (best, m) => (Math.abs(m.total) > Math.abs(best) ? m.total : best),
-                  0,
-                ),
-                currency,
-              )}
-              hint={
-                trend.reduce(
-                  (best, m) => (Math.abs(m.total) > Math.abs(best.total) ? m : best),
-                  trend[0] ?? { label: "—", total: 0 },
-                ).label
-              }
+              value={formatAmount(biggestMonth.total, currency)}
+              hint={biggestMonth.label}
+              onClick={() => openMonthKey(biggestMonth.key, biggestMonth.label)}
             />
             <Stat
               label="Bad choices"
               value={formatAmount(badChoiceTotal(yearRows), currency)}
               hint={`Flagged in ${spendYearLabel(year)}`}
               tone="destructive"
+              onClick={() =>
+                open(
+                  `Bad choices · ${spendYearLabel(year)}`,
+                  yearRows.filter((r) => isFlagged(r.bad_choice)),
+                )
+              }
             />
           </>
         )}
