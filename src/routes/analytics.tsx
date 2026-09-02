@@ -19,13 +19,8 @@ import { AppShell } from "@/components/AppShell";
 import { Panel, Stat } from "@/components/Stat";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { TransactionsModal } from "@/components/TransactionsModal";
+
 import { useExpenses } from "@/lib/use-expenses";
 import {
   CHART_COLORS,
@@ -592,59 +587,14 @@ function AnalyticsPage() {
         </Panel>
       </div>
 
-      <Dialog open={!!drill} onOpenChange={(open) => !open && setDrill(null)}>
-        <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col">
-          <DialogHeader>
-            <DialogTitle>
-              {drill ? `Transactions — ${drill.label}` : "Transactions"}
-            </DialogTitle>
-            <DialogDescription>
-              {drill
-                ? `${drillRows.length} entries · ${formatAmount(drillTotal, currency)}`
-                : "Click any chart element to drill down."}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex-1 min-h-0 overflow-auto">
-            {drill ? (
-              drillRows.length ? (
-                <table className="w-full text-sm">
-                  <thead className="sticky top-0 bg-card text-xs text-muted-foreground">
-                    <tr className="border-b border-border">
-                      <th className="py-2 text-left font-medium">Date</th>
-                      <th className="py-2 text-left font-medium">Description</th>
-                      <th className="py-2 text-left font-medium">Category</th>
-                      <th className="py-2 text-left font-medium">Place</th>
-                      <th className="py-2 text-right font-medium">Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {drillRows.map((r) => (
-                      <tr key={r.uid} className="border-b border-border/60">
-                        <td className="py-2 whitespace-nowrap text-muted-foreground">
-                          {formatDate(r.tran_date)}
-                        </td>
-                        <td className="py-2 pr-3">{r.exp_desc ?? "—"}</td>
-                        <td className="py-2 pr-3 text-muted-foreground">
-                          {r.exp_type ?? "—"}
-                          {r.exp_subtyp ? ` · ${r.exp_subtyp}` : ""}
-                        </td>
-                        <td className="py-2 pr-3 text-muted-foreground">{r.location ?? "—"}</td>
-                        <td className="numeric py-2 text-right font-semibold">
-                          {formatAmount(amountOf(r), currency)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              ) : (
-                <p className="text-sm text-muted-foreground">No matching entries.</p>
-              )
-            ) : (
-              <p className="text-sm text-muted-foreground">Nothing selected yet.</p>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <TransactionsModal
+        open={!!drill}
+        onOpenChange={(open) => !open && setDrill(null)}
+        label={drill?.label ?? ""}
+        rows={drillRows}
+        currency={currency}
+      />
+
 
     </AppShell>
   );
