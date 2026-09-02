@@ -396,6 +396,14 @@ function Dashboard() {
           )}
         </ul>
       </Panel>
+
+      <TransactionsModal
+        open={drill !== null}
+        onOpenChange={(o) => !o && setDrill(null)}
+        label={drill?.label ?? ""}
+        rows={drill?.rows ?? []}
+        currency={currency}
+      />
     </AppShell>
   );
 }
