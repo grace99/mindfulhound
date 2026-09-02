@@ -258,7 +258,15 @@ function Dashboard() {
               <Skeleton />
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={trend} margin={{ left: 4, right: 4, top: 8 }}>
+                <AreaChart
+                  data={trend}
+                  margin={{ left: 4, right: 4, top: 8 }}
+                  onClick={(st: { activeLabel?: string }) => {
+                    const m = trend.find((t) => t.label === st?.activeLabel);
+                    if (m) openMonthKey(m.key, m.label);
+                  }}
+                  style={{ cursor: "pointer" }}
+                >
                   <defs>
                     <linearGradient id="fillTrend" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="var(--color-chart-1)" stopOpacity={0.55} />
