@@ -64,6 +64,7 @@ function Dashboard() {
   const budgets = loadBudgets();
 
   const [pickedYear, setYear] = useState<number | null>(null);
+  const [drill, setDrill] = useState<{ label: string; rows: Expense[] } | null>(null);
   const years = spendYearsIn(rows);
   const year = pickedYear ?? defaultSpendYear(rows);
   const yearRows = rows.filter((r) => inSpendYear(r, year));
@@ -81,6 +82,7 @@ function Dashboard() {
   const yearDayCount = new Set(yearRows.filter(isCounted).map((r) => r.tran_date)).size || 1;
   const yearMonthCount = trend.length || 1;
   const catRows = isCurrentYear && monthRows.length ? monthRows : yearRows;
+  const catLabel = isCurrentYear && monthRows.length ? "this month" : spendYearLabel(year);
   const byType = sumBy(catRows, (r) => r.exp_type ?? "")
     .slice()
     .sort((a, b) => b.total - a.total)
@@ -92,6 +94,18 @@ function Dashboard() {
   const currency = "INR";
   const overBudget =
     budgets.overall > 0 && monthTotal > budgets.overall ? monthTotal - budgets.overall : 0;
+
+  const counted = (rs: Expense[]) => rs.filter(isCounted);
+  const open = (label: string, rs: Expense[]) => setDrill({ label, rows: counted(rs) });
+  const biggestMonth = trend.reduce(
+    (best, m) => (Math.abs(m.total) > Math.abs(best.total) ? m : best),
+    trend[0] ?? { key: "", label: "—", total: 0 },
+  );
+  const openMonthKey = (key: string, label: string) =>
+    open(label, yearRows.filter((r) => monthKey(r.tran_date) === key));
+  const openType = (name: string) =>
+    open(`${name} · ${catLabel}`, catRows.filter((r) => (r.exp_type ?? "") === name));
+
 
   return (
     <AppShell
@@ -131,6 +145,7 @@ function Dashboard() {
           value={formatAmount(yearTotal, currency)}
           hint={`${yearRows.length} entries`}
           tone="accent"
+          onClick={() => open(`Year ${spendYearLabel(year)}`, yearRows)}
         />
         {isCurrentYear ? (
           <>
@@ -139,23 +154,32 @@ function Dashboard() {
               value={formatAmount(monthTotal, currency)}
               hint={`${monthRows.length} entries`}
               tone="primary"
+              onClick={() => open("This month", monthRows)}
             />
             <Stat
               label="Today"
               value={formatAmount(totalOf(todayRows), currency)}
               hint={`${todayRows.length} entries`}
+              onClick={() => open(formatDate(today), todayRows)}
             />
             <Stat
               label="Avg / active day"
               value={formatAmount(monthTotal / dayCount, currency)}
               hint="This month"
               tone="accent"
+              onClick={() => open("This month", monthRows)}
             />
             <Stat
               label="Bad choices"
               value={formatAmount(badChoiceTotal(monthRows), currency)}
               hint="Flagged this month"
               tone="destructive"
+              onClick={() =>
+                open(
+                  "Bad choices · this month",
+                  monthRows.filter((r) => isFlagged(r.bad_choice)),
+                )
+              }
             />
           </>
         ) : (
@@ -165,34 +189,32 @@ function Dashboard() {
               value={formatAmount(yearTotal / yearMonthCount, currency)}
               hint={`${yearMonthCount} months with spend`}
               tone="primary"
+              onClick={() => open(`Year ${spendYearLabel(year)}`, yearRows)}
             />
             <Stat
               label="Avg / active day"
               value={formatAmount(yearTotal / yearDayCount, currency)}
               hint={`${yearDayCount} active days`}
               tone="accent"
+              onClick={() => open(`Year ${spendYearLabel(year)}`, yearRows)}
             />
             <Stat
               label="Biggest month"
-              value={formatAmount(
-                trend.reduce(
-                  (best, m) => (Math.abs(m.total) > Math.abs(best) ? m.total : best),
-                  0,
-                ),
-                currency,
-              )}
-              hint={
-                trend.reduce(
-                  (best, m) => (Math.abs(m.total) > Math.abs(best.total) ? m : best),
-                  trend[0] ?? { label: "—", total: 0 },
-                ).label
-              }
+              value={formatAmount(biggestMonth.total, currency)}
+              hint={biggestMonth.label}
+              onClick={() => openMonthKey(biggestMonth.key, biggestMonth.label)}
             />
             <Stat
               label="Bad choices"
               value={formatAmount(badChoiceTotal(yearRows), currency)}
               hint={`Flagged in ${spendYearLabel(year)}`}
               tone="destructive"
+              onClick={() =>
+                open(
+                  `Bad choices · ${spendYearLabel(year)}`,
+                  yearRows.filter((r) => isFlagged(r.bad_choice)),
+                )
+              }
             />
           </>
         )}
@@ -236,7 +258,15 @@ function Dashboard() {
               <Skeleton />
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={trend} margin={{ left: 4, right: 4, top: 8 }}>
+                <AreaChart
+                  data={trend}
+                  margin={{ left: 4, right: 4, top: 8 }}
+                  onClick={(st: { activeLabel?: string }) => {
+                    const m = trend.find((t) => t.label === st?.activeLabel);
+                    if (m) openMonthKey(m.key, m.label);
+                  }}
+                  style={{ cursor: "pointer" }}
+                >
                   <defs>
                     <linearGradient id="fillTrend" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="var(--color-chart-1)" stopOpacity={0.55} />
@@ -298,6 +328,8 @@ function Dashboard() {
                     outerRadius="82%"
                     paddingAngle={2}
                     stroke="none"
+                    style={{ cursor: "pointer" }}
+                    onClick={(d: { name?: string }) => d?.name && openType(d.name)}
                   >
                     {pieData.map((_, i) => (
                       <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
@@ -315,13 +347,19 @@ function Dashboard() {
           </div>
           <ul className="mt-3 max-h-64 space-y-1.5 overflow-y-auto pr-1 text-sm">
             {byType.map((c, i) => (
-              <li key={c.name} className="flex items-center gap-2">
-                <span
-                  className="size-2.5 shrink-0 rounded-full"
-                  style={{ background: CHART_COLORS[i % CHART_COLORS.length] }}
-                />
-                <span className="truncate text-muted-foreground">{c.name}</span>
-                <span className="numeric ml-auto">{formatAmount(c.total, currency)}</span>
+              <li key={c.name}>
+                <button
+                  type="button"
+                  onClick={() => openType(c.name)}
+                  className="flex w-full items-center gap-2 rounded-md px-1 py-0.5 text-left hover:bg-secondary"
+                >
+                  <span
+                    className="size-2.5 shrink-0 rounded-full"
+                    style={{ background: CHART_COLORS[i % CHART_COLORS.length] }}
+                  />
+                  <span className="truncate text-muted-foreground">{c.name}</span>
+                  <span className="numeric ml-auto">{formatAmount(c.total, currency)}</span>
+                </button>
               </li>
             ))}
           </ul>
@@ -358,6 +396,14 @@ function Dashboard() {
           )}
         </ul>
       </Panel>
+
+      <TransactionsModal
+        open={drill !== null}
+        onOpenChange={(o) => !o && setDrill(null)}
+        label={drill?.label ?? ""}
+        rows={drill?.rows ?? []}
+        currency={currency}
+      />
     </AppShell>
   );
 }
