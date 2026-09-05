@@ -50,17 +50,19 @@ import {
 export const Route = createFileRoute("/analytics")({
   head: () => ({
     meta: [
-      { title: "Spending analytics — Daybook" },
+      { title: "Spending analytics — mindfulhound" },
       {
         name: "description",
         content:
           "Trends over time, category and sub-category breakdowns, weekday patterns and location insights for your expenses.",
       },
-      { property: "og:title", content: "Spending analytics — Daybook" },
+      { property: "og:title", content: "Spending analytics — mindfulhound" },
       {
         property: "og:description",
         content: "Slice your spending by period, category, weekday and place.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: AnalyticsPage,

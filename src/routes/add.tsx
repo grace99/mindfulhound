@@ -16,16 +16,18 @@ import {
 export const Route = createFileRoute("/add")({
   head: () => ({
     meta: [
-      { title: "Add an expense — Daybook" },
+      { title: "Add an expense — mindfulhound" },
       {
         name: "description",
         content: "Capture a purchase with amount, category, sub-category and location in seconds.",
       },
-      { property: "og:title", content: "Add an expense — Daybook" },
+      { property: "og:title", content: "Add an expense — mindfulhound" },
       {
         property: "og:description",
         content: "Log today's purchase into your expense ledger.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: AddExpensePage,

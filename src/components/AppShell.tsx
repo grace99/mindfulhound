@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { BarChart3, ListOrdered, Moon, PiggyBank, PlusCircle, Sun, Wallet } from "lucide-react";
 import { useTheme } from "@/lib/use-theme";
+import mindfulhoundMark from "@/assets/mindfulhound-mark.png.asset.json";
 
 const NAV = [
   { to: "/", label: "Dashboard", icon: Wallet },
@@ -30,10 +31,14 @@ export function AppShell({
       <header className="sticky top-0 z-30 border-b border-border/70 bg-background/85 backdrop-blur">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3 sm:px-6">
           <Link to="/" className="flex items-center gap-2">
-            <span className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground">
-              <Wallet className="size-4" />
-            </span>
-            <span className="font-display text-base font-semibold tracking-tight">Daybook</span>
+            <img
+              src={mindfulhoundMark.url}
+              alt="mindfulhound logo"
+              width={1024}
+              height={1024}
+              className="size-9 object-contain"
+            />
+            <span className="font-display text-base font-semibold tracking-tight">mindfulhound</span>
           </Link>
           <nav className="flex flex-1 flex-wrap items-center gap-1">
             {NAV.map(({ to, label, icon: Icon }) => (
@@ -83,7 +88,7 @@ export function AppShell({
       </main>
 
       <footer className="mx-auto max-w-6xl px-4 pb-10 pt-4 text-xs text-muted-foreground sm:px-6">
-        Personal expense daybook · data lives in your own Supabase table p_dlyexp
+        mindfulhound · follow your money with intention
       </footer>
     </div>
   );

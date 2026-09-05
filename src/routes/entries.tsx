@@ -22,16 +22,18 @@ import { Pencil, Trash2 } from "lucide-react";
 export const Route = createFileRoute("/entries")({
   head: () => ({
     meta: [
-      { title: "Expense ledger — Daybook" },
+      { title: "Expense ledger — mindfulhound" },
       {
         name: "description",
         content: "Browse, search, edit and delete every captured purchase in your expense ledger.",
       },
-      { property: "og:title", content: "Expense ledger — Daybook" },
+      { property: "og:title", content: "Expense ledger — mindfulhound" },
       {
         property: "og:description",
         content: "Every purchase you have captured, searchable and editable.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: EntriesPage,

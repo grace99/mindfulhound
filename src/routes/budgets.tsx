@@ -22,17 +22,19 @@ import {
 export const Route = createFileRoute("/budgets")({
   head: () => ({
     meta: [
-      { title: "Budgets & alerts — Daybook" },
+      { title: "Budgets & alerts — mindfulhound" },
       {
         name: "description",
         content:
           "Set a monthly budget overall and per category, then track actual spend against it with over-budget alerts.",
       },
-      { property: "og:title", content: "Budgets & alerts — Daybook" },
+      { property: "og:title", content: "Budgets & alerts — mindfulhound" },
       {
         property: "og:description",
         content: "Monthly budget vs actual spend, per category.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: BudgetsPage,

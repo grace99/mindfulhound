@@ -43,17 +43,19 @@ import {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Daybook — Daily Expense Tracker & Analytics" },
+      { title: "mindfulhound — Expense Tracker & Analytics" },
       {
         name: "description",
         content:
           "Log daily purchases in seconds and see spend trends, category splits and budget alerts from your own expense ledger.",
       },
-      { property: "og:title", content: "Daybook — Daily Expense Tracker & Analytics" },
+      { property: "og:title", content: "mindfulhound — Expense Tracker & Analytics" },
       {
         property: "og:description",
         content: "Capture every purchase and analyse where your money actually goes.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Dashboard,
@@ -109,7 +111,7 @@ function Dashboard() {
 
   return (
     <AppShell
-      title="Your daybook"
+      title="Your spending"
       subtitle={`Spend year ${spendYearLabel(year)} · ${yearRows.length.toLocaleString("en-IN")} purchases · ${formatAmount(yearTotal, currency)} (1 Aug – 31 Jul)`}
       actions={
         <Button asChild>
