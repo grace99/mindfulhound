@@ -327,6 +327,11 @@ export const EAT_OUT_SUBTYPES = [
   "Lunch at restaurant",
   "Dinner at restaurant",
   "Tea and snacks outside",
+  "Biriyani",
+  "Ice cream",
+  "Pizza",
+  "Fried Chicken",
+  "Momos",
 ];
 
 /** True when the row's sub-category is one of the eat-out ones. */
@@ -338,6 +343,28 @@ export function isEatOut(row: Expense) {
 /** Sum of counted eat-out rows (meals and snacks bought outside). */
 export function eatOutTotal(rows: Expense[]) {
   return rows.reduce((acc, r) => (isCounted(r) && isEatOut(r) ? acc + amountOf(r) : acc), 0);
+}
+
+/**
+ * Eat-out share base: total Food and consumables minus total
+ * Household supplies and chemicals.
+ */
+export function eatOutBaseTotal(rows: Expense[]) {
+  const food = rows.reduce(
+    (acc, r) =>
+      isCounted(r) && (r.exp_type ?? "").trim().toLowerCase() === "food and consumables"
+        ? acc + amountOf(r)
+        : acc,
+    0,
+  );
+  const household = rows.reduce(
+    (acc, r) =>
+      isCounted(r) && (r.exp_subtyp ?? "").trim().toLowerCase() === "household supplies and chemicals"
+        ? acc + amountOf(r)
+        : acc,
+    0,
+  );
+  return food - household;
 }
 
 
