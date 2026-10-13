@@ -321,6 +321,26 @@ export function badChoiceTotal(rows: Expense[]) {
   );
 }
 
+/** Sub-categories that count as eating out. */
+export const EAT_OUT_SUBTYPES = [
+  "Breakfast at restaurant",
+  "Lunch at restaurant",
+  "Dinner at restaurant",
+  "Tea and snacks outside",
+];
+
+/** True when the row's sub-category is one of the eat-out ones. */
+export function isEatOut(row: Expense) {
+  const s = (row.exp_subtyp ?? "").trim().toLowerCase();
+  return EAT_OUT_SUBTYPES.some((v) => v.toLowerCase() === s);
+}
+
+/** Sum of counted eat-out rows (meals and snacks bought outside). */
+export function eatOutTotal(rows: Expense[]) {
+  return rows.reduce((acc, r) => (isCounted(r) && isEatOut(r) ? acc + amountOf(r) : acc), 0);
+}
+
+
 export function currentMonthKey() {
   return todayISO().slice(0, 7);
 }

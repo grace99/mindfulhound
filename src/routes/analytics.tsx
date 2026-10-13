@@ -27,8 +27,10 @@ import {
   amountOf,
   badChoiceTotal,
   dailySeries,
+  eatOutTotal,
   formatAmount,
   isCounted,
+  isEatOut,
   activeDayCount,
   spendYearMonths,
   incomeVsSpendSeries,
@@ -92,6 +94,7 @@ type Drill =
   | { kind: "subtype"; value: string; label: string }
   | { kind: "location"; value: string; label: string }
   | { kind: "weekday"; value: string; label: string }
+  | { kind: "eatout"; value: string; label: string }
   | null;
 
 const DAY_ABBR = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -142,6 +145,8 @@ function AnalyticsPage() {
   const weekdays = weekdaySeries(filtered);
   const incomeSpend = useMemo(() => incomeVsSpendSeries(filtered), [filtered]);
   const bad = badChoiceTotal(filtered);
+  const eatOut = eatOutTotal(filtered);
+  const eatOutCount = counted.filter(isEatOut).length;
   const biggest = [...counted].sort(
     (a, b) => amountOf(b) - amountOf(a),
   )[0];
@@ -166,6 +171,8 @@ function AnalyticsPage() {
             return r.tran_date
               ? DAY_ABBR[new Date(`${r.tran_date}T00:00:00`).getDay()] === drill.value
               : false;
+          case "eatout":
+            return isEatOut(r);
           default:
             return false;
         }
@@ -287,7 +294,7 @@ function AnalyticsPage() {
         )}
       </Panel>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <Stat
           label="Total spend"
           value={formatAmount(total, currency)}
@@ -304,6 +311,13 @@ function AnalyticsPage() {
           value={`${total ? Math.round((bad / total) * 100) : 0}%`}
           hint={formatAmount(bad, currency)}
           tone="destructive"
+        />
+        <Stat
+          label="Eat outs"
+          value={`${total ? Math.round((eatOut / total) * 100) : 0}%`}
+          hint={`${formatAmount(eatOut, currency)} · ${eatOutCount} entries`}
+          tone="primary"
+          onClick={() => setDrill({ kind: "eatout", value: "eat-outs", label: "Eat outs" })}
         />
         <Stat
           label="Biggest single spend"
