@@ -316,13 +316,14 @@ function AnalyticsPage() {
           label="Eat outs"
           value={`${total ? Math.round((eatOut / total) * 100) : 0}%`}
           hint={`${formatAmount(eatOut, currency)} · ${eatOutCount} entries`}
-          tone="accent"
+          tone="primary"
           onClick={() => setDrill({ kind: "eatout", value: "eat-outs", label: "Eat outs" })}
         />
         <Stat
           label="Biggest single spend"
           value={formatAmount(biggest ? amountOf(biggest) : 0, currency)}
           hint={biggest?.exp_desc ?? "—"}
+          tone="accent"
         />
       </div>
 
