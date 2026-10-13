@@ -317,7 +317,7 @@ function AnalyticsPage() {
         />
         <Stat
           label="Eat outs"
-          value={`${total ? Math.round((eatOut / total) * 100) : 0}%`}
+          value={`${Math.round(eatOutShare * 100)}%`}
           hint={`${formatAmount(eatOut, currency)} · ${eatOutCount} entries`}
           tone="primary"
           onClick={() => setDrill({ kind: "eatout", value: "eat-outs", label: "Eat outs" })}
