@@ -148,6 +148,8 @@ function AnalyticsPage() {
   const bad = badChoiceTotal(filtered);
   const eatOut = eatOutTotal(filtered);
   const eatOutCount = counted.filter(isEatOut).length;
+  const eatOutBase = eatOutBaseTotal(filtered);
+  const eatOutShare = eatOutBase > 0 ? eatOut / eatOutBase : 0;
   const biggest = [...counted].sort(
     (a, b) => amountOf(b) - amountOf(a),
   )[0];
