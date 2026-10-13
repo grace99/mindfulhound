@@ -28,6 +28,7 @@ import {
   badChoiceTotal,
   dailySeries,
   eatOutTotal,
+  eatOutBaseTotal,
   formatAmount,
   isCounted,
   isEatOut,
