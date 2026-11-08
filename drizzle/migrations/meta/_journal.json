@@ -1,5 +1,20 @@
 {
   "version": "7",
   "dialect": "postgresql",
-  "entries": []
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1794161626874,
+      "tag": "0000_private_accounts_and_expenses",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794161822975,
+      "tag": "0001_account_status_legacy_import",
+      "breakpoints": true
+    }
+  ]
 }
