@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_status: {
+        Row: {
+          disabled: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          disabled?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          disabled?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       p_dlyexp: {
         Row: {
           abs_amt: number | null
@@ -25,6 +43,7 @@ export type Database = {
           exp_desc: string | null
           exp_subtyp: string | null
           exp_type: string | null
+          legacy_uid: number | null
           location: string | null
           month: number | null
           nth_yr: number | null
@@ -43,6 +62,7 @@ export type Database = {
           exp_desc?: string | null
           exp_subtyp?: string | null
           exp_type?: string | null
+          legacy_uid?: number | null
           location?: string | null
           month?: number | null
           nth_yr?: number | null
@@ -61,6 +81,7 @@ export type Database = {
           exp_desc?: string | null
           exp_subtyp?: string | null
           exp_type?: string | null
+          legacy_uid?: number | null
           location?: string | null
           month?: number | null
           nth_yr?: number | null
@@ -119,6 +140,7 @@ export type Database = {
     }
     Functions: {
       has_role: { Args: { _role: string; _user_id: string }; Returns: boolean }
+      is_account_active: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
