@@ -90,7 +90,15 @@ export type Database = {
           tran_date?: string | null
           uid?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "p_dlyexp_owner_profile_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
