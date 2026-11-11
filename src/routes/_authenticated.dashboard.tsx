@@ -40,7 +40,7 @@ import {
 } from "@/lib/expenses";
 
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
       { title: "mindfulhound — Expense Tracker & Analytics" },

@@ -19,7 +19,7 @@ import {
   type Budgets,
 } from "@/lib/expenses";
 
-export const Route = createFileRoute("/budgets")({
+export const Route = createFileRoute("/_authenticated/budgets")({
   head: () => ({
     meta: [
       { title: "Budgets & alerts — mindfulhound" },
