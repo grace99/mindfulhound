@@ -1,0 +1,11 @@
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.p_dlyexp TO authenticated;
+GRANT ALL ON public.p_dlyexp TO service_role;
+DROP POLICY IF EXISTS "Active administrators manage all expenses" ON public.p_dlyexp;
+GRANT SELECT, INSERT, UPDATE ON public.profiles TO authenticated;
+GRANT ALL ON public.profiles TO service_role;
+GRANT SELECT ON public.user_roles TO authenticated;
+GRANT ALL ON public.user_roles TO service_role;
+GRANT SELECT ON public.account_status TO authenticated;
+GRANT ALL ON public.account_status TO service_role;
+GRANT EXECUTE ON FUNCTION public.has_role(uuid, text) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.is_account_active(uuid) TO authenticated, service_role;
