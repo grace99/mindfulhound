@@ -15,6 +15,20 @@
       "when": 1794161822975,
       "tag": "0001_account_status_legacy_import",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794370671214,
+      "tag": "0002_secure_private_expenses_and_grants",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794370841999,
+      "tag": "0003_cascade_private_expenses_with_account_removal",
+      "breakpoints": true
     }
   ]
 }

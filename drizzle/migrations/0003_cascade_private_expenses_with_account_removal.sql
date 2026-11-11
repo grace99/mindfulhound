@@ -1,0 +1,1 @@
+ALTER TABLE public.p_dlyexp ADD CONSTRAINT p_dlyexp_owner_profile_fkey FOREIGN KEY (owner_id) REFERENCES public.profiles(id) ON DELETE CASCADE;

@@ -50,7 +50,7 @@ import {
   weekdaySeries,
 } from "@/lib/expenses";
 
-export const Route = createFileRoute("/analytics")({
+export const Route = createFileRoute("/_authenticated/analytics")({
   head: () => ({
     meta: [
       { title: "Spending analytics — mindfulhound" },

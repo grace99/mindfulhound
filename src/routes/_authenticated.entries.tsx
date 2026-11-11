@@ -19,7 +19,7 @@ import {
 } from "@/lib/expenses";
 import { Pencil, Trash2 } from "lucide-react";
 
-export const Route = createFileRoute("/entries")({
+export const Route = createFileRoute("/_authenticated/entries")({
   head: () => ({
     meta: [
       { title: "Expense ledger — mindfulhound" },

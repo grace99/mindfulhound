@@ -13,7 +13,7 @@ import {
   type Expense,
 } from "@/lib/expenses";
 
-export const Route = createFileRoute("/add")({
+export const Route = createFileRoute("/_authenticated/add")({
   head: () => ({
     meta: [
       { title: "Add an expense — mindfulhound" },
