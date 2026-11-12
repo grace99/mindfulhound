@@ -1,4 +1,4 @@
-import { supabase } from "./supabase";
+import { supabase } from "@/integrations/supabase/client";
 
 export const TABLE = "p_dlyexp";
 
@@ -18,9 +18,11 @@ export type Expense = {
   crcy: string | null;
   abs_amt: number | null;
   t_amt: number | null;
+  owner_id: string;
+  legacy_uid: number | null;
 };
 
-export type ExpenseInput = Omit<Expense, "uid">;
+export type ExpenseInput = Omit<Expense, "uid" | "owner_id" | "legacy_uid">;
 
 export const DEFAULTS = {
   location: "Pondicherry",
@@ -171,33 +173,21 @@ export async function fetchExpenses(): Promise<Expense[]> {
       .order("uid", { ascending: false })
       .range(from, from + PAGE_SIZE - 1);
     if (error) throw new Error(error.message);
-    const batch = (data ?? []) as Expense[];
+    const batch = data ?? [];
     all.push(...batch);
     if (batch.length < PAGE_SIZE) break;
   }
   return all;
 }
 
-async function nextUid(): Promise<number> {
-  const { data, error } = await supabase
-    .from(TABLE)
-    .select("uid")
-    .order("uid", { ascending: false })
-    .limit(1);
-  if (error) throw new Error(error.message);
-  const max = data && data.length > 0 ? Number((data[0] as { uid: number }).uid) : 0;
-  return max + 1;
-}
-
 export async function createExpense(input: ExpenseInput): Promise<Expense> {
-  const uid = await nextUid();
   const { data, error } = await supabase
     .from(TABLE)
-    .insert([{ ...input, uid }])
+    .insert(input)
     .select()
     .single();
   if (error) throw new Error(error.message);
-  return data as Expense;
+  return data;
 }
 
 export async function updateExpense(uid: number, patch: Partial<ExpenseInput>): Promise<Expense> {
@@ -208,7 +198,7 @@ export async function updateExpense(uid: number, patch: Partial<ExpenseInput>): 
     .select()
     .single();
   if (error) throw new Error(error.message);
-  return data as Expense;
+  return data;
 }
 
 export async function deleteExpense(uid: number): Promise<void> {
@@ -384,16 +374,17 @@ export const CHART_COLORS = [
 /* --------------------------------- budgets -------------------------------- */
 /* Budgets are a local preference (no budget table in the schema). */
 
-const BUDGET_KEY = "dlyexp.budgets.v1";
+const BUDGET_KEY = "mindfulhound.budgets.v1";
 
 export type Budgets = { overall: number; byType: Record<string, number> };
 
 export const emptyBudgets: Budgets = { overall: 0, byType: {} };
 
-export function loadBudgets(): Budgets {
+export function loadBudgets(userId: string | undefined): Budgets {
   if (typeof window === "undefined") return emptyBudgets;
+  if (!userId) return emptyBudgets;
   try {
-    const raw = window.localStorage.getItem(BUDGET_KEY);
+    const raw = window.localStorage.getItem(`${BUDGET_KEY}.${userId}`);
     if (!raw) return emptyBudgets;
     const parsed = JSON.parse(raw) as Partial<Budgets>;
     return { overall: Number(parsed.overall ?? 0), byType: parsed.byType ?? {} };
@@ -402,9 +393,9 @@ export function loadBudgets(): Budgets {
   }
 }
 
-export function saveBudgets(b: Budgets) {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(BUDGET_KEY, JSON.stringify(b));
+export function saveBudgets(b: Budgets, userId: string | undefined) {
+  if (typeof window === "undefined" || !userId) return;
+  window.localStorage.setItem(`${BUDGET_KEY}.${userId}`, JSON.stringify(b));
 }
 
 /* --------------------------- spend-year month list ------------------------ */

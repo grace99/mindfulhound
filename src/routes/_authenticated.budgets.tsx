@@ -5,6 +5,7 @@ import { Panel, Stat } from "@/components/Stat";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useExpenses } from "@/lib/use-expenses";
+import { useAuth } from "@/lib/use-auth";
 import {
   currentMonthKey,
   emptyBudgets,
@@ -41,14 +42,15 @@ export const Route = createFileRoute("/_authenticated/budgets")({
 });
 
 function BudgetsPage() {
+  const { user } = useAuth();
   const { data: rows = [] } = useExpenses();
   const currency = "INR";
   const [budgets, setBudgets] = useState<Budgets>(emptyBudgets);
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    setBudgets(loadBudgets());
-  }, []);
+    setBudgets(loadBudgets(user?.id));
+  }, [user?.id]);
 
   const thisMonth = currentMonthKey();
   const monthRows = useMemo(
@@ -65,7 +67,7 @@ function BudgetsPage() {
 
   function persist(next: Budgets) {
     setBudgets(next);
-    saveBudgets(next);
+    saveBudgets(next, user?.id);
     setSaved(true);
     window.setTimeout(() => setSaved(false), 1800);
   }

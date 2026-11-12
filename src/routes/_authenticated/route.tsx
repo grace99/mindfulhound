@@ -28,6 +28,8 @@ export const Route = createFileRoute('/_authenticated')({
     if (error || !data.user) {
       throw redirect({ to: SIGN_IN_ROUTE })
     }
+    const { data: active } = await supabase.rpc('is_account_active', { _user_id: data.user.id })
+    if (!active) throw redirect({ to: SIGN_IN_ROUTE })
     return { user: data.user }
   },
   component: () => <Outlet />,

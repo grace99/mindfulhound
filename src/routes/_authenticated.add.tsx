@@ -105,7 +105,7 @@ function AddExpensePage() {
                 onSuccess: (row) => setJustSaved((prev) => [row, ...prev].slice(0, 6)),
               })
             }
-            onCancel={() => navigate({ to: "/" })}
+            onCancel={() => navigate({ to: "/dashboard" })}
           />
         </Panel>
 
