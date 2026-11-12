@@ -1,12 +1,15 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { isSupabaseConfigured } from "@/lib/supabase";
-import { BarChart3, ListOrdered, Moon, PiggyBank, PlusCircle, Sun, Wallet } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { BarChart3, ListOrdered, LogOut, Moon, PiggyBank, PlusCircle, Settings, ShieldCheck, Sun, Wallet } from "lucide-react";
 import { useTheme } from "@/lib/use-theme";
 import mindfulhoundMark from "@/assets/mindfulhound-mark.png.asset.json";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/lib/use-auth";
+import { supabase } from "@/integrations/supabase/client";
 
 const NAV = [
-  { to: "/", label: "Dashboard", icon: Wallet },
+  { to: "/dashboard", label: "Dashboard", icon: Wallet },
   { to: "/add", label: "Add expense", icon: PlusCircle },
   { to: "/entries", label: "Ledger", icon: ListOrdered },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
@@ -25,12 +28,22 @@ export function AppShell({
   children: ReactNode;
 }) {
   const { theme, toggle } = useTheme();
+  const { user, displayName, role } = useAuth();
+  const queryClient = useQueryClient();
+  const navigate = useNavigate({ from: "/dashboard" });
+
+  async function signOut() {
+    await queryClient.cancelQueries();
+    queryClient.clear();
+    await supabase.auth.signOut();
+    await navigate({ to: "/auth", replace: true });
+  }
 
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-30 border-b border-border/70 bg-background/85 backdrop-blur">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3 sm:px-6">
-          <Link to="/" className="flex items-center gap-2">
+          <Link to="/dashboard" className="flex items-center gap-2">
             <img
               src={mindfulhoundMark.url}
               alt="mindfulhound logo"
@@ -45,7 +58,7 @@ export function AppShell({
               <Link
                 key={to}
                 to={to}
-                activeOptions={{ exact: to === "/" }}
+                activeOptions={{ exact: to === "/dashboard" }}
                 className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                 activeProps={{ className: "bg-secondary text-foreground" }}
               >
@@ -53,29 +66,46 @@ export function AppShell({
                 <span className="hidden sm:inline">{label}</span>
               </Link>
             ))}
+            <Link
+              to="/account"
+              className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              activeProps={{ className: "bg-secondary text-foreground" }}
+            >
+              <Settings className="size-4" />
+              <span className="hidden sm:inline">Account</span>
+            </Link>
+            {role === "admin" && (
+              <Link
+                to="/admin"
+                className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                activeProps={{ className: "bg-secondary text-foreground" }}
+              >
+                <ShieldCheck className="size-4" />
+                <span className="hidden sm:inline">Admin</span>
+              </Link>
+            )}
           </nav>
-          <button
-            type="button"
+          <div className="flex items-center gap-2">
+            <span className="hidden max-w-40 truncate text-xs text-muted-foreground sm:block">
+              {displayName || user?.email}
+            </span>
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={toggle}
             aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
             title={theme === "dark" ? "Light theme" : "Dark theme"}
-            className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
           >
             {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
-            <span className="hidden sm:inline">{theme === "dark" ? "Light" : "Dark"}</span>
-          </button>
+          </Button>
+          <Button variant="ghost" size="icon" onClick={signOut} aria-label="Sign out" title="Sign out">
+            <LogOut className="size-4" />
+          </Button>
+          </div>
         </div>
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-        {!isSupabaseConfigured && (
-          <div className="mb-6 rounded-xl border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-foreground">
-            <strong className="font-display">Database key missing.</strong> Add your Supabase
-            publishable (anon) key as <code className="numeric">VITE_SUPABASE_PUBLISHABLE_KEY</code>{" "}
-            so the app can read and write <code className="numeric">p_dlyexp</code>.
-          </div>
-        )}
-
         <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="text-2xl font-semibold sm:text-3xl">{title}</h1>

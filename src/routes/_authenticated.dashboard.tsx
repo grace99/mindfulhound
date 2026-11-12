@@ -16,6 +16,7 @@ import { TransactionsModal } from "@/components/TransactionsModal";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useExpenses } from "@/lib/use-expenses";
+import { useAuth } from "@/lib/use-auth";
 import {
   CHART_COLORS,
   amountOf,
@@ -62,8 +63,9 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 });
 
 function Dashboard() {
+  const { user } = useAuth();
   const { data: rows = [], isLoading, error } = useExpenses();
-  const budgets = loadBudgets();
+  const budgets = loadBudgets(user?.id);
 
   const [pickedYear, setYear] = useState<number | null>(null);
   const [drill, setDrill] = useState<{ label: string; rows: Expense[] } | null>(null);

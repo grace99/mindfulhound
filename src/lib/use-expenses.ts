@@ -7,15 +7,16 @@ import {
   type Expense,
   type ExpenseInput,
 } from "./expenses";
-import { isSupabaseConfigured } from "./supabase";
+import { useAuth } from "@/lib/use-auth";
 
 export const expensesKey = ["expenses"] as const;
 
 export function useExpenses() {
+  const { user, disabled } = useAuth();
   return useQuery<Expense[]>({
-    queryKey: expensesKey,
+    queryKey: [...expensesKey, user?.id],
     queryFn: fetchExpenses,
-    enabled: isSupabaseConfigured,
+    enabled: Boolean(user && !disabled),
     staleTime: 30_000,
   });
 }
