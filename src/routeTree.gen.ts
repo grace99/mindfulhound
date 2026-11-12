@@ -9,39 +9,45 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedAddRouteImport } from './routes/_authenticated.add'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated.analytics'
 import { Route as AuthenticatedBudgetsRouteImport } from './routes/_authenticated.budgets'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
 import { Route as AuthenticatedEntriesRouteImport } from './routes/_authenticated.entries'
 
-const AuthenticatedAddRoute = AuthenticatedAddRouteImport.update({
-  id: '/_authenticated/add',
-  path: '/add',
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAddRoute = AuthenticatedAddRouteImport.update({
+  id: '/add',
+  path: '/add',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAnalyticsRoute = AuthenticatedAnalyticsRouteImport.update({
-  id: '/_authenticated/analytics',
+  id: '/analytics',
   path: '/analytics',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedBudgetsRoute = AuthenticatedBudgetsRouteImport.update({
-  id: '/_authenticated/budgets',
+  id: '/budgets',
   path: '/budgets',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
-  id: '/_authenticated/dashboard',
+  id: '/dashboard',
   path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedEntriesRoute = AuthenticatedEntriesRouteImport.update({
-  id: '/_authenticated/entries',
+  id: '/entries',
   path: '/entries',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof AuthenticatedRouteRouteWithChildren
   '/add': typeof AuthenticatedAddRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/budgets': typeof AuthenticatedBudgetsRoute
@@ -49,6 +55,7 @@ export interface FileRoutesByFullPath {
   '/entries': typeof AuthenticatedEntriesRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof AuthenticatedRouteRouteWithChildren
   '/add': typeof AuthenticatedAddRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/budgets': typeof AuthenticatedBudgetsRoute
@@ -57,6 +64,7 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/_authenticated/add': typeof AuthenticatedAddRoute
   '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
   '/_authenticated/budgets': typeof AuthenticatedBudgetsRoute
@@ -65,11 +73,13 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/add' | '/analytics' | '/budgets' | '/dashboard' | '/entries'
+  fullPaths:
+    '/' | '/add' | '/analytics' | '/budgets' | '/dashboard' | '/entries'
   fileRoutesByTo: FileRoutesByTo
-  to: '/add' | '/analytics' | '/budgets' | '/dashboard' | '/entries'
+  to: '/' | '/add' | '/analytics' | '/budgets' | '/dashboard' | '/entries'
   id:
     | '__root__'
+    | '/_authenticated'
     | '/_authenticated/add'
     | '/_authenticated/analytics'
     | '/_authenticated/budgets'
@@ -78,6 +88,57 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+}
+
+declare module '@tanstack/react-router' {
+  interface FileRoutesByPath {
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/add': {
+      id: '/_authenticated/add'
+      path: '/add'
+      fullPath: '/add'
+      preLoaderRoute: typeof AuthenticatedAddRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/analytics': {
+      id: '/_authenticated/analytics'
+      path: '/analytics'
+      fullPath: '/analytics'
+      preLoaderRoute: typeof AuthenticatedAnalyticsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/budgets': {
+      id: '/_authenticated/budgets'
+      path: '/budgets'
+      fullPath: '/budgets'
+      preLoaderRoute: typeof AuthenticatedBudgetsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/entries': {
+      id: '/_authenticated/entries'
+      path: '/entries'
+      fullPath: '/entries'
+      preLoaderRoute: typeof AuthenticatedEntriesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+  }
+}
+
+interface AuthenticatedRouteRouteChildren {
   AuthenticatedAddRoute: typeof AuthenticatedAddRoute
   AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
   AuthenticatedBudgetsRoute: typeof AuthenticatedBudgetsRoute
@@ -85,52 +146,19 @@ export interface RootRouteChildren {
   AuthenticatedEntriesRoute: typeof AuthenticatedEntriesRoute
 }
 
-declare module '@tanstack/react-router' {
-  interface FileRoutesByPath {
-    '/_authenticated/add': {
-      id: '/_authenticated/add'
-      path: '/add'
-      fullPath: '/add'
-      preLoaderRoute: typeof AuthenticatedAddRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/analytics': {
-      id: '/_authenticated/analytics'
-      path: '/analytics'
-      fullPath: '/analytics'
-      preLoaderRoute: typeof AuthenticatedAnalyticsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/budgets': {
-      id: '/_authenticated/budgets'
-      path: '/budgets'
-      fullPath: '/budgets'
-      preLoaderRoute: typeof AuthenticatedBudgetsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/dashboard': {
-      id: '/_authenticated/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/entries': {
-      id: '/_authenticated/entries'
-      path: '/entries'
-      fullPath: '/entries'
-      preLoaderRoute: typeof AuthenticatedEntriesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-  }
-}
-
-const rootRouteChildren: RootRouteChildren = {
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAddRoute: AuthenticatedAddRoute,
   AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRoute,
   AuthenticatedBudgetsRoute: AuthenticatedBudgetsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEntriesRoute: AuthenticatedEntriesRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
+const rootRouteChildren: RootRouteChildren = {
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
