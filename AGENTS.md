@@ -9,4 +9,4 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 
-- Use the generated Lovable Cloud client with authenticated user-scoped access for expense CRUD; isolate the legacy source in a read-only client used only for explicit imports, so copied data becomes private without changing the original.
+- Use the app-owned ledger client with authenticated user-scoped access against Supabase project jaellgweggisthweiabv. Existing p_dlyexp entries belong to gopinathr.r@gmail.com; only backfill unowned rows. Enforce expense ownership with RLS, including for administrators. Do not use generated Lovable Cloud clients or anonymous imports for expense CRUD. Never reset or delete either database during migration.

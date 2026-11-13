@@ -6,7 +6,7 @@ import { useTheme } from "@/lib/use-theme";
 import mindfulhoundMark from "@/assets/mindfulhound-mark.png.asset.json";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/use-auth";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/ledger-client";
 
 const NAV = [
   { to: "/dashboard", label: "Dashboard", icon: Wallet },

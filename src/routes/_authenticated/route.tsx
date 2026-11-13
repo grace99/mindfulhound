@@ -16,7 +16,7 @@
 //
 // Edit freely. This file is only re-injected when deleted entirely.
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
-import { supabase } from '@/integrations/supabase/client'
+import { supabase } from '@/lib/ledger-client'
 
 // Lovable's Supabase auth scaffolds use `/auth`; change this if the app uses another sign-in route.
 const SIGN_IN_ROUTE = '/auth'
@@ -28,7 +28,7 @@ export const Route = createFileRoute('/_authenticated')({
     if (error || !data.user) {
       throw redirect({ to: SIGN_IN_ROUTE })
     }
-    const { data: active } = await supabase.rpc('is_account_active', { _user_id: data.user.id })
+    const { data: active } = await supabase.rpc('ledger_is_account_active', { _user_id: data.user.id })
     if (!active) throw redirect({ to: SIGN_IN_ROUTE })
     return { user: data.user }
   },

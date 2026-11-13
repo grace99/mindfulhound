@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/ledger-client";
 
 export const TABLE = "p_dlyexp";
 

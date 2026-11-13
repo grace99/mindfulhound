@@ -1,23 +1,23 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/integrations/supabase/types";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Database } from "@/lib/ledger-types";
+import { requireSupabaseAuth } from "@/lib/ledger-auth-middleware";
 
 type UserScopedClient = SupabaseClient<Database>;
 type AuthContext = { supabase: UserScopedClient; userId: string };
 
 async function ensureAdmin(context: AuthContext) {
   const [{ data: isAdmin }, { data: isActive }] = await Promise.all([
-    context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" }),
-    context.supabase.rpc("is_account_active", { _user_id: context.userId }),
+    context.supabase.rpc("ledger_has_role", { _user_id: context.userId, _role: "admin" }),
+    context.supabase.rpc("ledger_is_account_active", { _user_id: context.userId }),
   ]);
   if (!isAdmin || !isActive) throw new Error("Only active administrators can manage accounts.");
 }
 
 async function getAdminClient() {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  return supabaseAdmin;
+  const { getLedgerAdminClient } = await import("@/lib/ledger-admin.server");
+  return getLedgerAdminClient();
 }
 
 export const listManagedUsers = createServerFn({ method: "GET" })
@@ -43,9 +43,9 @@ export const listManagedUsers = createServerFn({ method: "GET" })
     if (users.length === 0) return [];
     const ids = users.map((user) => user.id);
     const [profiles, roles, statuses] = await Promise.all([
-      admin.from("profiles").select("id, display_name").in("id", ids),
-      admin.from("user_roles").select("user_id, role").in("user_id", ids),
-      admin.from("account_status").select("user_id, disabled").in("user_id", ids),
+      admin.from("ledger_profiles").select("id, display_name").in("id", ids),
+      admin.from("ledger_user_roles").select("user_id, role").in("user_id", ids),
+      admin.from("ledger_account_status").select("user_id, disabled").in("user_id", ids),
     ]);
     if (profiles.error || roles.error || statuses.error) {
       throw new Error("Could not load account details.");
@@ -91,25 +91,25 @@ export const changeManagedUserRole = createServerFn({ method: "POST" })
     }
     const admin = await getAdminClient();
     const { data: existing, error: existingError } = await admin
-      .from("user_roles")
+      .from("ledger_user_roles")
       .select("role")
       .eq("user_id", data.userId);
     if (existingError) throw new Error("Could not update this account.");
     const isTargetAdmin = existing.some((item) => item.role === "admin");
     if (isTargetAdmin && data.role !== "admin") {
       const { count, error } = await admin
-        .from("user_roles")
+        .from("ledger_user_roles")
         .select("user_id", { count: "exact", head: true })
         .eq("role", "admin");
       if (error || (count ?? 0) <= 1) throw new Error("Keep at least one administrator.");
     }
 
     const { error: upsertError } = await admin
-      .from("user_roles")
+      .from("ledger_user_roles")
       .upsert({ user_id: data.userId, role: data.role }, { onConflict: "user_id,role" });
     if (upsertError) throw new Error("Could not update this account role.");
     const { error: cleanupError } = await admin
-      .from("user_roles")
+      .from("ledger_user_roles")
       .delete()
       .eq("user_id", data.userId)
       .neq("role", data.role);
@@ -128,7 +128,7 @@ export const setManagedUserDisabled = createServerFn({ method: "POST" })
     }
     const admin = await getAdminClient();
     const { error } = await admin
-      .from("account_status")
+      .from("ledger_account_status")
       .upsert(
         { user_id: data.userId, disabled: data.disabled, updated_at: new Date().toISOString() },
         { onConflict: "user_id" },
@@ -147,13 +147,13 @@ export const removeManagedUser = createServerFn({ method: "POST" })
     }
     const admin = await getAdminClient();
     const { data: roles, error: rolesError } = await admin
-      .from("user_roles")
+      .from("ledger_user_roles")
       .select("role")
       .eq("user_id", data.userId);
     if (rolesError) throw new Error("Could not verify the account role.");
     if (roles.some((item) => item.role === "admin")) {
       const { count, error } = await admin
-        .from("user_roles")
+        .from("ledger_user_roles")
         .select("user_id", { count: "exact", head: true })
         .eq("role", "admin");
       if (error || (count ?? 0) <= 1) throw new Error("Keep at least one administrator.");

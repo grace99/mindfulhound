@@ -1,3 +1,5 @@
+// Historical Lovable Cloud schema. Do not replay these migrations against the
+// existing ledger project; use supabase/migrations and docs/existing-supabase.md.
 import { defineConfig } from "drizzle-kit";
 
 export default defineConfig({

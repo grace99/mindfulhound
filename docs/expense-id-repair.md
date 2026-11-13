@@ -1,5 +1,9 @@
 # Repair expense IDs after shared-ledger imports
 
+This documents the historical Lovable Cloud repair. For the existing-project
+cutover to `jaellgweggisthweiabv`, follow [the migration guide](existing-supabase.md)
+instead; it includes ID generation and ownership setup in one transaction.
+
 Earlier imports spread a source row into the destination payload, including its
 `uid`. A TypeScript type assertion did not remove that field. Explicit IDs bypass any destination identity sequence. Inspection of the deployed
 Spend Management database also found that `uid` is a plain column with no default
