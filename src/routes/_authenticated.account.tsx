@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Copy, LoaderCircle, Save } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { copyLegacyLedger } from "@/lib/legacy-ledger";
 import { useAuth } from "@/lib/use-auth";
 import { expensesKey } from "@/lib/use-expenses";
-import { listManagedUsers } from "@/lib/account.functions";
 
 export const Route = createFileRoute("/_authenticated/account")({
   head: () => ({
@@ -36,19 +35,19 @@ function AccountPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [copied, setCopied] = useState(0);
   const [copyDone, setCopyDone] = useState(false);
-  const adminList = useServerFn(listManagedUsers);
+  useEffect(() => setName(displayName), [displayName]);
   const accountMutation = useMutation({
     mutationFn: async (nextName: string) => {
       if (!user) throw new Error("Sign in to update your profile.");
-      const updated = await supabase.auth.updateUser({
-        data: { name: nextName, display_name: nextName },
-      });
-      if (updated.error) throw updated.error;
       const { error } = await supabase
         .from("profiles")
         .update({ display_name: nextName, updated_at: new Date().toISOString() })
         .eq("id", user.id);
       if (error) throw error;
+      const updated = await supabase.auth.updateUser({
+        data: { name: nextName, display_name: nextName },
+      });
+      if (updated.error) throw updated.error;
     },
     onSuccess: () => setNotice("Your name has been saved."),
     onError: (error) => setErrorMessage(error.message),
@@ -58,7 +57,7 @@ function AccountPage() {
     event.preventDefault();
     setNotice("");
     setErrorMessage("");
-    await accountMutation.mutateAsync(name.trim());
+    accountMutation.mutate(name.trim());
   }
 
   async function copyLedger() {
@@ -76,12 +75,6 @@ function AccountPage() {
       setErrorMessage(error instanceof Error ? error.message : "The ledger copy could not be completed.");
     }
   }
-
-  async function signOutOtherAccounts() {
-    // Retained as account-page context only: administrative actions live on their own page.
-    void adminList;
-  }
-  void signOutOtherAccounts;
 
   return (
     <AppShell title="Your account" subtitle={user?.email ?? "Personal account settings"}>
