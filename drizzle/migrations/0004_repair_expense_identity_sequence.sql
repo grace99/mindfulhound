@@ -10,7 +10,9 @@ DECLARE
 BEGIN
   identity_sequence := pg_get_serial_sequence('public.p_dlyexp', 'uid')::regclass;
   IF identity_sequence IS NULL THEN
-    RAISE EXCEPTION 'No identity sequence found for public.p_dlyexp.uid';
+    -- Some deployed databases have a plain bigint column. Migration 0005
+    -- creates its identity sequence; let that migration run.
+    RETURN;
   END IF;
 
   SELECT max(uid) INTO highest_uid FROM public.p_dlyexp;
