@@ -62,7 +62,7 @@ test("copies rows with the authenticated client and preserves duplicate protecti
   const rpc = mock(async () => ({ data: true, error: null }));
   expect(await handler({ context: { userId: "admin-user", supabase: { rpc, from } } })).toBe(1);
   expect(from).toHaveBeenCalledWith("p_dlyexp");
-  expect(upsert).toHaveBeenCalledWith([{ uid: 42, exp_desc: "Shared entry", legacy_uid: 42 }], {
+  expect(upsert).toHaveBeenCalledWith([{ exp_desc: "Shared entry", legacy_uid: 42 }], {
     onConflict: "owner_id,legacy_uid",
     ignoreDuplicates: true,
   });
