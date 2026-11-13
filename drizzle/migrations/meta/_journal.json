@@ -29,6 +29,13 @@
       "when": 1794370841999,
       "tag": "0003_cascade_private_expenses_with_account_removal",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794542400000,
+      "tag": "0004_repair_expense_identity_sequence",
+      "breakpoints": true
     }
   ]
 }

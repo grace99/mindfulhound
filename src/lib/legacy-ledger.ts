@@ -1,11 +1,8 @@
 import { legacySupabase } from "@/lib/legacy-supabase";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import type { Expense } from "@/lib/expenses";
 
 const PAGE_SIZE = 500;
-
-type LegacyExpense = Omit<Expense, "uid" | "owner_id" | "legacy_uid">;
 
 /** Copies legacy rows into the current account and never writes to the source ledger. */
 export const copyLegacyLedger = createServerFn({ method: "POST" })
@@ -35,9 +32,9 @@ export const copyLegacyLedger = createServerFn({ method: "POST" })
       const sourceRows = data ?? [];
       if (sourceRows.length === 0) break;
 
-      const copies = sourceRows.map((row) => ({
-        ...(row as LegacyExpense),
-        legacy_uid: Number(row.uid),
+      const copies = sourceRows.map(({ uid, ...expense }) => ({
+        ...expense,
+        legacy_uid: Number(uid),
       }));
       const { data: inserted, error: insertError } = await supabase
         .from("p_dlyexp")
