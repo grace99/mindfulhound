@@ -33,8 +33,10 @@ function AccountPage() {
   const [name, setName] = useState(displayName);
   const [notice, setNotice] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const [copied, setCopied] = useState(0);
   const [copyDone, setCopyDone] = useState(false);
+  const [copyPending, setCopyPending] = useState(false);
+  const copySharedLedger = useServerFn(copyLegacyLedger);
+  const canCopyLedger = role === "admin";
   useEffect(() => setName(displayName), [displayName]);
   const accountMutation = useMutation({
     mutationFn: async (nextName: string) => {
@@ -61,18 +63,20 @@ function AccountPage() {
   }
 
   async function copyLedger() {
+    if (!canCopyLedger || copyPending) return;
     setNotice("");
     setErrorMessage("");
     setCopyDone(false);
-    setCopied(0);
+    setCopyPending(true);
     try {
-      const count = await copyLegacyLedger(setCopied);
-      setCopied(count);
+      const count = await copySharedLedger();
       setCopyDone(true);
       setNotice(count ? `Copied ${count.toLocaleString("en-IN")} new entries.` : "Your ledger is already up to date.");
       await queryClient.invalidateQueries({ queryKey: [...expensesKey, user?.id] });
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "The ledger copy could not be completed.");
+    } finally {
+      setCopyPending(false);
     }
   }
 
@@ -104,10 +108,11 @@ function AccountPage() {
               Copy the earlier shared ledger into this account. The original remains unchanged; copying again adds only entries not already here.
             </p>
           </div>
-          <Button type="button" onClick={() => void copyLedger()} disabled={copyDone}>
-            {copied > 0 && !copyDone ? <LoaderCircle className="size-4 animate-spin" /> : <Copy className="size-4" />}
-            {copied > 0 && !copyDone ? `Copying · ${copied.toLocaleString("en-IN")} new` : copyDone ? "Copy complete" : "Copy existing ledger"}
+          <Button type="button" onClick={() => void copyLedger()} disabled={!canCopyLedger || copyPending || copyDone}>
+            {copyPending ? <LoaderCircle className="size-4 animate-spin" /> : <Copy className="size-4" />}
+            {copyPending ? "Copying…" : copyDone ? "Copy complete" : "Copy existing ledger"}
           </Button>
+          {!canCopyLedger && <p className="text-sm text-muted-foreground">Only administrators can copy the shared ledger.</p>}
           {notice && <p role="status" className="text-sm text-success">{notice}</p>}
           {errorMessage && <p role="alert" className="text-sm text-destructive">{errorMessage}</p>}
         </section>
