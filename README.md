@@ -22,3 +22,13 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+## Account-private ledgers
+
+The app uses the existing `jaellgweggisthweiabv` Supabase project and `p_dlyexp`
+table. Apply the [existing-project migration and deployment steps](docs/existing-supabase.md)
+before deploying this version. Existing unowned entries are assigned to
+`gopinathr.r@gmail.com`; other users see only their own expenses.
+
+Use `bun install --frozen-lockfile`, `bun run test`, and `bun run dev` for the
+lockfile-based development workflow.

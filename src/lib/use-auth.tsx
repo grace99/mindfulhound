@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import type { User } from "@supabase/supabase-js";
 import type { QueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/ledger-client";
 
 export type AuthState = {
   user: User | null;
@@ -69,9 +69,9 @@ export function AuthProvider({
     if (!user) return;
 
     void Promise.all([
-      supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle(),
-      supabase.from("user_roles").select("role").eq("user_id", user.id),
-      supabase.from("account_status").select("disabled").eq("user_id", user.id).maybeSingle(),
+      supabase.from("ledger_profiles").select("display_name").eq("id", user.id).maybeSingle(),
+      supabase.from("ledger_user_roles").select("role").eq("user_id", user.id),
+      supabase.from("ledger_account_status").select("disabled").eq("user_id", user.id).maybeSingle(),
     ]).then(([profile, roles, status]) => {
       if (!active) return;
       setDisplayName(profile.data?.display_name ?? "");
