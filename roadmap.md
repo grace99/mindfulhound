@@ -4,4 +4,4 @@
 - [ ] Add public email/social sign-in, protected expense pages, profile settings, and secure admin controls.
 - [ ] Add a one-click, repeat-safe copy from the legacy ledger that never modifies the source.
 - [ ] Validate auth, account workflows, import behavior, and preview health.
-- [ ] Add the missing account and administrator routes and verify all navigation targets.
+- [x] Add the missing account and administrator routes and verify all navigation targets.
