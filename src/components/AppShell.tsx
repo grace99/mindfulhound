@@ -66,14 +66,6 @@ export function AppShell({
                 <span className="hidden sm:inline">{label}</span>
               </Link>
             ))}
-            <Link
-              to="/account"
-              className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-              activeProps={{ className: "bg-secondary text-foreground" }}
-            >
-              <Settings className="size-4" />
-              <span className="hidden sm:inline">Account</span>
-            </Link>
             {role === "admin" && (
               <Link
                 to="/admin"
@@ -86,9 +78,19 @@ export function AppShell({
             )}
           </nav>
           <div className="flex items-center gap-2">
-            <span className="hidden max-w-40 truncate text-xs text-muted-foreground sm:block">
-              {displayName || user?.email}
-            </span>
+            <div className="flex flex-col items-start gap-1">
+              <span className="max-w-40 truncate text-xs text-muted-foreground">
+                {displayName || user?.email}
+              </span>
+              <Link
+                to="/account"
+                className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                activeProps={{ className: "bg-secondary text-foreground" }}
+              >
+                <Settings className="size-4" />
+                <span>Account</span>
+              </Link>
+            </div>
           <Button
             variant="ghost"
             size="icon"
