@@ -36,6 +36,13 @@
       "when": 1794542400000,
       "tag": "0004_repair_expense_identity_sequence",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794542400001,
+      "tag": "0005_ensure_expense_identity",
+      "breakpoints": true
     }
   ]
 }
