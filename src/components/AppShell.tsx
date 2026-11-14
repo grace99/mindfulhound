@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { BarChart3, ListOrdered, LogOut, Moon, PiggyBank, PlusCircle, Settings, ShieldCheck, Sun, Wallet } from "lucide-react";
+import { BriefcaseBusiness, BarChart3, ListOrdered, LogOut, Moon, PiggyBank, PlusCircle, Settings, ShieldCheck, Sun, Wallet } from "lucide-react";
 import { useTheme } from "@/lib/use-theme";
 import mindfulhoundMark from "@/assets/mindfulhound-mark.png.asset.json";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ const NAV = [
   { to: "/add", label: "Add expense", icon: PlusCircle },
   { to: "/entries", label: "Ledger", icon: ListOrdered },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
+  { to: "/portfolio", label: "Portfolio", icon: BriefcaseBusiness },
   { to: "/budgets", label: "Budgets", icon: PiggyBank },
 ] as const;
 
@@ -57,6 +58,7 @@ export function AppShell({
             {NAV.map(({ to, label, icon: Icon }) => (
               <Link
                 key={to}
+                aria-label={label}
                 to={to}
                 activeOptions={{ exact: to === "/dashboard" }}
                 className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
