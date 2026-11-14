@@ -32,3 +32,10 @@ before deploying this version. Existing unowned entries are assigned to
 
 Use `bun install --frozen-lockfile`, `bun run test`, and `bun run dev` for the
 lockfile-based development workflow.
+
+## Portfolio
+
+The Portfolio module adds private INR holdings, dated valuation history and
+handover notes. Apply the [portfolio migration](docs/portfolio.md) in the existing
+Supabase project before deploying this version. Personal spreadsheet rows are
+imported through a CSV preview and are not included in the source repository.
