@@ -1,5 +1,9 @@
 # Portfolio sorting, reserve and financial goals
 
+The [liquidity update](portfolio-liquidity.md) supersedes the original net-worth
+corpus described below: only available Cash holdings now fund goals. Apply that
+additional migration and use its current status/rollout rules.
+
 ## Deploy
 
 After the portfolio migration, run

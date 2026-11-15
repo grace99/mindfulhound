@@ -6,7 +6,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
-import { inr, optionalMoney, type Holding } from "@/lib/portfolio-model";
+import { inr, inrWhole, optionalMoney, type Holding } from "@/lib/portfolio-model";
 import { availableCorpus, planGoals, type Goal, type GoalInput } from "@/lib/portfolio-goals";
 import { fetchGoals, saveGoal, deleteGoal } from "@/lib/portfolio-goals-api";
 import { todayISO } from "@/lib/expenses";
@@ -52,42 +52,16 @@ export function PortfolioGoals({ holdings }: { holdings: Holding[] }) {
   });
   return (
     <div className="mt-6 space-y-5">
-      <Panel
-        title="Emergency reserve & available corpus"
-        description="A planning reserve of ₹10,00,000 is set aside before funding goals. It is not a new holding or liability."
-      >
-        <div className="grid gap-4 sm:grid-cols-3">
-          <Stat label="Emergency fund reserve" value={inr(corpus.reserve)} />
-          <Stat
-            label="Available for goals"
-            value={inr(corpus.available)}
-            tone="accent"
-            hint="Current net worth minus emergency reserve"
-          />
-          <Stat
-            label="Realized holding P/L"
-            value={inr(corpus.realizedPL)}
-            hint="Known value minus cost on realized holdings"
-          />
-        </div>
-        <p className="mt-3 text-xs text-muted-foreground">
-          Gains and losses are already reflected in net worth and are not added again. This is a
-          planning corpus, not necessarily liquid cash; locked assets may not be available by a
-          goal's deadline.{" "}
-          {corpus.unknown > 0 ? `${corpus.unknown} unknown valuations are excluded. ` : ""}
-          {corpus.missingRealizedCost > 0
-            ? `${corpus.missingRealizedCost} realized holdings have unknown P/L and are excluded from the P/L figure.`
-            : ""}
-        </p>
-        {corpus.reserveShortfall > 0 && (
-          <p role="status" className="mt-3 text-sm text-warning">
-            Reserve shortfall: {inr(corpus.reserveShortfall)}. No corpus is allocated to goals.
-          </p>
-        )}
-      </Panel>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Stat
+          label="Corpus available for allocation"
+          value={inrWhole(corpus.available)}
+          tone="accent"
+        />
+        <Stat label="Emergency fund" value={inrWhole(corpus.reserve)} />
+      </div>
       <Panel
         title="Financial goals & goal seek"
-        description="Log short- and long-term goals, then estimate the monthly saving needed to reach them."
         actions={
           <Button
             disabled={query.isPending || query.isError}
@@ -135,13 +109,6 @@ export function PortfolioGoals({ holdings }: { holdings: Holding[] }) {
                 <p className="numeric text-lg">{inr(planning.monthlyTotal)}</p>
               </div>
             </div>
-            <p className="mt-3 text-xs leading-5 text-muted-foreground">
-              Priority 1 is funded first, then target date breaks ties. Each rupee of current corpus
-              is allocated once across all active goals. Monthly saving assumes deposits at month
-              end and the returns/inflation you enter; these are scenarios, not guaranteed returns.
-              Dates with less than one full month remaining require a lump sum. Completing a goal is
-              a manual tracking action and does not move money.
-            </p>
             <label className="mt-4 flex flex-wrap items-center gap-2 text-sm">
               Show goals
               <select
@@ -156,9 +123,7 @@ export function PortfolioGoals({ holdings }: { holdings: Holding[] }) {
               </select>
             </label>
             {goals.length === 0 && (
-              <p className="py-6 text-center text-sm text-muted-foreground">
-                Add your first goal. Target amounts are in today's INR; inflation is optional.
-              </p>
+              <p className="py-6 text-center text-sm text-muted-foreground">No goals.</p>
             )}
             <ul className="mt-4 grid gap-4 lg:grid-cols-2">
               {planning.plans
@@ -227,7 +192,7 @@ export function PortfolioGoals({ holdings }: { holdings: Holding[] }) {
                       <div className="h-full bg-accent" style={{ width: `${p.progress}%` }} />
                     </div>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {p.progress.toFixed(1)}% projected coverage from current corpus
+                      {p.progress.toFixed(1)}% coverage
                     </p>
                     <p className="mt-3 text-sm font-medium">
                       {p.monthly == null
@@ -258,8 +223,8 @@ export function PortfolioGoals({ holdings }: { holdings: Holding[] }) {
                   <div>
                     <span className="font-medium">{g.name}</span>
                     <p className="text-xs text-muted-foreground">
-                      Completed manually · {g.term === "short" ? "Short term" : "Long term"} ·{" "}
-                      {inr(g.target_inr)} target · Not allocated current corpus
+                      Completed · {g.term === "short" ? "Short term" : "Long term"} ·{" "}
+                      {inr(g.target_inr)} target
                     </p>
                   </div>
                   <div className="flex shrink-0">
@@ -290,12 +255,6 @@ export function PortfolioGoals({ holdings }: { holdings: Holding[] }) {
               ))}
             {goals.length > 0 && term !== "all" && !goals.some((g) => g.term === term) && (
               <p className="py-4 text-sm text-muted-foreground">No goals match this term.</p>
-            )}
-            {goals.length > 0 && (
-              <p className="mt-3 text-xs text-muted-foreground">
-                Term filters change only the list; allocations and totals still include every active
-                goal.
-              </p>
             )}
           </>
         )}
@@ -419,13 +378,9 @@ function GoalEditor({
         if (!open && !pending) onClose();
       }}
     >
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>{goal ? "Edit financial goal" : "Add financial goal"}</DialogTitle>
-          <DialogDescription>
-            Goal seek uses your available corpus after the ₹10,00,000 emergency reserve. Assumed
-            returns are not guaranteed.
-          </DialogDescription>
         </DialogHeader>
         <form className="grid gap-3" onSubmit={submit}>
           <label className="grid gap-1 text-sm">
@@ -523,10 +478,6 @@ function GoalEditor({
             Tracking notes
             <Textarea maxLength={1000} value={notes} onChange={(e) => setNotes(e.target.value)} />
           </label>
-          <p className="text-xs text-muted-foreground">
-            0% return/inflation uses straight-line savings without assumed growth. Completing a goal
-            is a manual status update, not a portfolio transaction.
-          </p>
           {(error || localError) && (
             <p role="alert" className="text-sm text-destructive">
               {localError || error}

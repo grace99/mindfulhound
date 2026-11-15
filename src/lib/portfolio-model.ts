@@ -4,6 +4,7 @@ export type Asset = {
   name: string;
   category: string;
   position_type: "asset" | "liability";
+  liquidity_status: "available" | "locked" | "pending_redemption" | "not_applicable";
   repatriable: boolean | null;
   gain_status: "realized" | "unrealized" | "unspecified";
   entered_rate_pct: number | null;
@@ -37,6 +38,7 @@ export type AssetInput = Pick<
   | "name"
   | "category"
   | "position_type"
+  | "liquidity_status"
   | "repatriable"
   | "gain_status"
   | "entered_rate_pct"
@@ -71,6 +73,20 @@ export const inr = (value: number | null | undefined) =>
         currency: "INR",
         maximumFractionDigits: 2,
       }).format(value);
+export const inrWhole = (value: number) =>
+  new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
+export const liquidityLabel = (status: Asset["liquidity_status"]) =>
+  ({
+    available: "Available",
+    locked: "Locked in",
+    pending_redemption: "Pending redemption",
+    not_applicable: "Not applicable",
+  })[status] ?? "Locked in";
 export function optionalMoney(text: string): number | null {
   const clean = text.trim().replace(/[₹,\s]/g, "");
   if (!clean || /^(n\/?a|unknown|—)$/i.test(clean)) return null;
@@ -259,6 +275,12 @@ export function parsePortfolioImport(text: string): ImportRow[] {
         name,
         category,
         position_type: type,
+        liquidity_status:
+          type === "liability"
+            ? "not_applicable"
+            : category.trim().toLowerCase() === "cash" || redemption.toLowerCase() === "anytime"
+              ? "available"
+              : "locked",
         cost_inr: cost,
         value_inr: rawValue == null ? null : Math.abs(rawValue),
         gain_status:
@@ -298,7 +320,7 @@ export function csvFile(rows: (string | number | null)[][]) {
 }
 
 export type HoldingSort =
-  "name" | "category" | "cost" | "value" | "gain" | "exposure" | "redemption";
+  "name" | "category" | "status" | "cost" | "value" | "gain" | "exposure" | "redemption";
 export function sortHoldings(
   holdings: Holding[],
   key: HoldingSort,
@@ -311,6 +333,8 @@ export function sortHoldings(
         return h.name;
       case "category":
         return h.category;
+      case "status":
+        return liquidityLabel(h.liquidity_status);
       case "cost":
         return h.valuation?.cost_inr ?? null;
       case "value":

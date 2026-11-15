@@ -52,23 +52,33 @@ test("default exposure sort is descending; liabilities and unknown values stay l
     ["Large", "Liability", "Small", "Unknown"],
   );
 });
-test("reserve is deducted once and realized gains/losses are not added again", () => {
+test("corpus uses only available Cash asset values, less the emergency fund", () => {
+  const cash = (id, value, status = "available", category = "Cash", type = "asset") => ({
+    ...holding(id, id, value, 0, "realized", type),
+    category,
+    liquidity_status: status,
+  });
   const c = availableCorpus([
-    holding("a", "Realized gain", 1500000, 1000000, "realized"),
-    holding("b", "Realized loss", 400000, 500000, "realized"),
-    holding("c", "Unrealized", 300000, 200000),
-    holding("d", "Card", 100000, 0, "realized", "liability"),
-    holding("e", "Unknown", null, null, "realized"),
+    cash("available", 1500000),
+    cash("other cash", 400000, "available", " cash "),
+    cash("locked", 5000000, "locked"),
+    cash("pending", 6000000, "pending_redemption"),
+    cash("gold", 9000000, "available", "Gold"),
+    cash("trapped", 8000000, "available", "Trapped cash"),
+    cash("debt", 100000, "not_applicable", "Cash", "liability"),
+    cash("unknown", null),
   ]);
-  assert.equal(c.netWorth, 2100000);
-  assert.equal(c.realizedPL, 400000);
-  assert.equal(c.available, 1100000);
+  assert.equal(c.liquidAssets, 1900000);
+  assert.equal(c.available, 900000);
   assert.equal(c.reserve, 1000000);
-  assert.equal(c.missingRealizedCost, 1);
-  const low = availableCorpus([holding("x", "Low corpus", 100, 0)]);
-  assert.equal(low.available, 0);
-  assert.equal(low.reserveShortfall, 999900);
+  assert.equal(availableCorpus([cash("low", 100)]).available, 0);
+  assert.equal(
+    availableCorpus([{ ...cash("missing status", 5000000), liquidity_status: undefined }])
+      .available,
+    0,
+  );
 });
+
 test("priority allocation shares each rupee once and calculates zero-return monthly saving", () => {
   const p = planGoals([goal("Second", 600000, 2), goal("First", 600000, 1)], 1000000, "2026-11-15");
   assert.equal(p.allocated, 1000000);

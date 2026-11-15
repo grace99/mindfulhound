@@ -42,3 +42,6 @@ import/export are disabled in the current release.
 
 Portfolio goal planning and sorting require the [goals upgrade migration](docs/portfolio-goals.md).
 The current version disables portfolio import/export and reserves ₹10,00,000 before goal planning.
+
+The [liquidity update](docs/portfolio-liquidity.md) restricts goal allocation to
+available Cash holdings minus the emergency fund and adds holding availability flags.

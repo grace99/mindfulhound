@@ -2,13 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   CATEGORIES,
   emptyHandover,
@@ -46,6 +40,9 @@ export function PortfolioEditor({
   const [status, setStatus] = useState<AssetInput["gain_status"]>(
     holding?.gain_status ?? "unspecified",
   );
+  const [liquidity, setLiquidity] = useState<AssetInput["liquidity_status"]>(
+    holding?.liquidity_status ?? "available",
+  );
   const [rate, setRate] = useState(String(holding?.entered_rate_pct ?? ""));
   const [redemption, setRedemption] = useState<AssetInput["redemption_kind"]>(
     holding?.redemption_kind ?? "unspecified",
@@ -75,6 +72,12 @@ export function PortfolioEditor({
           name: name.trim(),
           category: category.trim(),
           position_type: type,
+          liquidity_status:
+            type === "liability"
+              ? "not_applicable"
+              : liquidity === "not_applicable"
+                ? "locked"
+                : liquidity,
           repatriable: repatriable === "unknown" ? null : repatriable === "yes",
           gain_status: status,
           entered_rate_pct: rateValue,
@@ -96,6 +99,7 @@ export function PortfolioEditor({
       }}
     >
       <DialogContent
+        aria-describedby={undefined}
         className="max-h-[90vh] overflow-y-auto sm:max-w-2xl"
         onEscapeKeyDown={(e) => {
           if (pending) e.preventDefault();
@@ -106,9 +110,6 @@ export function PortfolioEditor({
       >
         <DialogHeader>
           <DialogTitle>{holding ? "Update holding" : "Add holding"}</DialogTitle>
-          <DialogDescription>
-            All amounts are INR. Blank amounts mean unknown; zero means zero.
-          </DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="grid gap-4">
           <label className="grid gap-1 text-sm">
@@ -121,6 +122,28 @@ export function PortfolioEditor({
             />
           </label>
           <div className="grid gap-3 sm:grid-cols-2">
+            <label className="grid gap-1 text-sm">
+              Status
+              <select
+                aria-label="Holding status"
+                className={selectClass}
+                disabled={type === "liability"}
+                value={
+                  type === "liability"
+                    ? "not_applicable"
+                    : liquidity === "not_applicable"
+                      ? "locked"
+                      : liquidity
+                }
+                onChange={(e) => setLiquidity(e.target.value as typeof liquidity)}
+              >
+                <option value="available">Available</option>
+                <option value="locked">Locked in</option>
+                <option value="pending_redemption">Pending redemption</option>
+                {type === "liability" && <option value="not_applicable">Not applicable</option>}
+              </select>
+            </label>
+
             <label className="grid gap-1 text-sm">
               Category
               <Input
@@ -200,9 +223,6 @@ export function PortfolioEditor({
                 value={rate}
                 onChange={(e) => setRate(e.target.value)}
               />
-              <span className="text-xs text-muted-foreground">
-                Optional spreadsheet rate, not a calculated IRR.
-              </span>
             </label>
             <label className="grid gap-1 text-sm">
               Repatriable
@@ -245,11 +265,7 @@ export function PortfolioEditor({
             )}
           </div>
           <fieldset className="grid gap-3 rounded-lg border border-border p-4">
-            <legend className="px-1 text-sm font-medium">Handover notes for Hana</legend>
-            <p className="text-xs text-muted-foreground">
-              Private notes only: no access or legal ownership is transferred. Do not store
-              passwords, PINs, or recovery codes.
-            </p>
+            <legend className="px-1 text-sm font-medium">Handover notes</legend>
             {(
               [
                 ["institution", "Institution", 240],
@@ -281,10 +297,6 @@ export function PortfolioEditor({
               {localError || error}
             </p>
           )}
-          <p className="text-xs text-muted-foreground">
-            Saving records a dated valuation. Saving the same date corrects that snapshot; older
-            dates remain in history. For insurance, enter surrender/current value, not death cover.
-          </p>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" disabled={pending} onClick={onClose}>
               Cancel
