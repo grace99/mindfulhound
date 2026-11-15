@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Plus, Upload, Download, Pencil, Trash2, BookOpen } from "lucide-react";
+import { Plus, Upload, Download, Pencil, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
-import { Panel, Stat } from "@/components/Stat";
+import { Panel } from "@/components/Stat";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -20,6 +20,7 @@ import { todayISO } from "@/lib/expenses";
 import { fetchPortfolio, saveHolding, deleteHolding } from "@/lib/portfolio";
 import {
   inr,
+  liquidityLabel,
   portfolioSummary,
   gain,
   redemptionLabel,
@@ -107,7 +108,6 @@ function PortfolioPage() {
   return (
     <AppShell
       title="Portfolio"
-      subtitle="One private register for your assets, obligations, and handover notes · all amounts in INR"
       actions={
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" disabled title="Portfolio import is disabled">
@@ -147,39 +147,9 @@ function PortfolioPage() {
         </Panel>
       ) : (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <Stat
-              label="Total assets"
-              value={inr(summary.assets)}
-              tone="primary"
-              hint="Latest recorded values"
-            />
-            <Stat
-              label="Liabilities"
-              value={inr(summary.liabilities)}
-              hint="Obligations, shown as positive balances"
-            />
-            <Stat
-              label="Net worth"
-              value={inr(summary.netWorth)}
-              tone={summary.netWorth < 0 ? "destructive" : "accent"}
-            />
-            <Stat
-              label="Holdings"
-              value={holdings.length}
-              hint={`${summary.unknown} with unknown value`}
-            />
-          </div>
-          <p className="mt-3 text-xs text-muted-foreground">
-            Entire portfolio · unknown values are excluded from totals. Values are manual snapshots,
-            not live prices. Insurance should use surrender/current value, not death cover.
-          </p>
           <PortfolioGoals holdings={holdings} />
           <div className="mt-6 grid gap-5 lg:grid-cols-2">
-            <Panel
-              title="Asset allocation"
-              description="Exposure = holding value ÷ total asset value. Liabilities are excluded."
-            >
+            <Panel title="Asset allocation">
               {summary.allocation.length ? (
                 <ul className="space-y-3">
                   {summary.allocation.map((c) => (
@@ -200,15 +170,10 @@ function PortfolioPage() {
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-muted-foreground">
-                  Add known asset values to see allocation.
-                </p>
+                <p className="text-sm text-muted-foreground">No allocation data.</p>
               )}
             </Panel>
-            <Panel
-              title="Redemption calendar"
-              description="Month precision is retained. A passed date means review the holding, not automatic redemption."
-            >
+            <Panel title="Redemption calendar">
               {maturities.length ? (
                 <ul className="max-h-72 divide-y divide-border overflow-y-auto">
                   {maturities.map((h) => (
@@ -267,6 +232,7 @@ function PortfolioPage() {
                       ["exposure", "Exposure"],
                       ["name", "Item"],
                       ["category", "Category"],
+                      ["status", "Status"],
                       ["cost", "Cost"],
                       ["value", "Value"],
                       ["gain", "Gain / loss"],
@@ -292,11 +258,7 @@ function PortfolioPage() {
           >
             {!holdings.length ? (
               <div className="py-8 text-center">
-                <p className="font-medium">Bring your investments into one place</p>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Add a holding. Cash, insurance, receivables and liabilities can all be tracked
-                  here.
-                </p>
+                <p className="font-medium">No holdings.</p>
               </div>
             ) : !filtered.length ? (
               <p className="text-sm text-muted-foreground">No holdings match these filters.</p>
@@ -314,6 +276,9 @@ function PortfolioPage() {
                       <p className="mt-1 text-xs text-muted-foreground">
                         {h.category} · {h.position_type}
                         {h.repatriable === true ? " · Repatriable" : ""}
+                      </p>
+                      <p className="mt-2 text-xs font-medium">
+                        {liquidityLabel(h.liquidity_status)}
                       </p>
                       <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
                         <div>
@@ -384,6 +349,7 @@ function PortfolioPage() {
                         {(
                           [
                             ["Item", "name"],
+                            ["Status", "status"],
                             ["Cost", "cost"],
                             ["Value", "value"],
                             ["Gain / loss", "gain"],
@@ -444,6 +410,9 @@ function PortfolioPage() {
                                   {h.entered_rate_pct}% entered rate
                                 </p>
                               )}
+                            </td>
+                            <td className="whitespace-nowrap px-2 py-4 text-xs">
+                              {liquidityLabel(h.liquidity_status)}
                             </td>
                             <td className="whitespace-nowrap px-2 py-4 numeric">
                               {inr(h.valuation?.cost_inr)}
@@ -507,23 +476,12 @@ function PortfolioPage() {
               </>
             )}
           </Panel>
-          <Panel
-            className="mt-6"
-            title="Handover to Hana"
-            description="Keep institution contacts, masked references, document locations and instructions with each holding. These notes do not grant access or transfer legal ownership."
-            actions={
-              <Button variant="outline" disabled title="Portfolio export is disabled">
-                <Download className="size-4" />
-                Export handover CSV
-              </Button>
-            }
-          >
-            <p className="text-sm text-muted-foreground">
-              <BookOpen className="mr-2 inline size-4" />
-              Open a holding to review its notes and valuation history. Portfolio import and export
-              are disabled. Never store passwords, PINs or recovery codes.
-            </p>
-          </Panel>
+          <div className="mt-6 flex justify-end">
+            <Button variant="outline" disabled title="Portfolio export is disabled">
+              <Download className="size-4" />
+              Export handover CSV
+            </Button>
+          </div>
         </>
       )}
       {editor && (
@@ -543,12 +501,12 @@ function PortfolioPage() {
             if (!open) setDetail(null);
           }}
         >
-          <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+          <DialogContent
+            className="max-h-[90vh] overflow-y-auto sm:max-w-2xl"
+            aria-describedby={undefined}
+          >
             <DialogHeader>
               <DialogTitle>{detail.name}</DialogTitle>
-              <DialogDescription>
-                {detail.category} · INR valuations and private handover notes
-              </DialogDescription>
             </DialogHeader>
             <dl className="grid gap-3 text-sm">
               {(

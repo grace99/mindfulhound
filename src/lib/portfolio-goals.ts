@@ -1,5 +1,4 @@
 import type { Holding } from "./portfolio-model.ts";
-import { gain, portfolioSummary } from "./portfolio-model.ts";
 
 export const EMERGENCY_FUND_INR = 1_000_000;
 export type Goal = {
@@ -30,22 +29,17 @@ export type GoalInput = Pick<
   | "notes"
 >;
 export function availableCorpus(holdings: Holding[]) {
-  const summary = portfolioSummary(holdings);
-  let realizedPL = 0,
-    missingRealizedCost = 0;
-  for (const h of holdings) {
-    if (h.position_type !== "asset" || h.gain_status !== "realized") continue;
-    const pl = gain(h);
-    if (pl == null) missingRealizedCost++;
-    else realizedPL += pl;
-  }
+  const cash = holdings.filter(
+    (h) =>
+      h.position_type === "asset" &&
+      h.category.trim().toLowerCase() === "cash" &&
+      h.liquidity_status === "available",
+  );
+  const liquidAssets = cash.reduce((sum, h) => sum + (h.valuation?.value_inr ?? 0), 0);
   return {
-    ...summary,
+    liquidAssets,
     reserve: EMERGENCY_FUND_INR,
-    available: Math.max(0, summary.netWorth - EMERGENCY_FUND_INR),
-    reserveShortfall: Math.max(0, EMERGENCY_FUND_INR - summary.netWorth),
-    realizedPL,
-    missingRealizedCost,
+    available: Math.max(0, liquidAssets - EMERGENCY_FUND_INR),
   };
 }
 // Number of complete monthly contribution periods before the target date.
