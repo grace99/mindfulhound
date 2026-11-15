@@ -296,3 +296,50 @@ export function csvFile(rows: (string | number | null)[][]) {
     )
     .join("\r\n");
 }
+
+export type HoldingSort =
+  "name" | "category" | "cost" | "value" | "gain" | "exposure" | "redemption";
+export function sortHoldings(
+  holdings: Holding[],
+  key: HoldingSort,
+  direction: "asc" | "desc",
+  totalAssets: number,
+) {
+  function value(h: Holding): string | number | null {
+    switch (key) {
+      case "name":
+        return h.name;
+      case "category":
+        return h.category;
+      case "cost":
+        return h.valuation?.cost_inr ?? null;
+      case "value":
+        return h.valuation?.value_inr ?? null;
+      case "gain":
+        return gain(h);
+      case "exposure":
+        return h.position_type === "asset" && h.valuation?.value_inr != null && totalAssets > 0
+          ? h.valuation.value_inr / totalAssets
+          : null;
+      case "redemption":
+        return h.redemption_kind === "anytime" ? "0000-00" : h.redemption_month;
+    }
+  }
+  return [...holdings].sort((a, b) => {
+    const av = value(a),
+      bv = value(b);
+    if (av == null && bv != null) return 1;
+    if (av != null && bv == null) return -1;
+    const compared =
+      av == null || bv == null
+        ? 0
+        : typeof av === "number" && typeof bv === "number"
+          ? av - bv
+          : String(av).localeCompare(String(bv), undefined, { sensitivity: "base", numeric: true });
+    return (
+      (direction === "asc" ? compared : -compared) ||
+      a.name.localeCompare(b.name) ||
+      a.id.localeCompare(b.id)
+    );
+  });
+}

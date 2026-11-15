@@ -14,16 +14,17 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { PortfolioEditor } from "@/components/PortfolioEditor";
-import { PortfolioImport } from "@/components/PortfolioImport";
+import { PortfolioGoals } from "@/components/PortfolioGoals";
 import { useAuth } from "@/lib/use-auth";
 import { todayISO } from "@/lib/expenses";
-import { fetchPortfolio, saveHolding, deleteHolding, importHoldings } from "@/lib/portfolio";
+import { fetchPortfolio, saveHolding, deleteHolding } from "@/lib/portfolio";
 import {
   inr,
   portfolioSummary,
   gain,
   redemptionLabel,
-  csvFile,
+  sortHoldings,
+  type HoldingSort,
   type Holding,
 } from "@/lib/portfolio-model";
 
@@ -39,14 +40,6 @@ export const Route = createFileRoute("/_authenticated/portfolio")({
   }),
   component: PortfolioPage,
 });
-function download(name: string, content: string) {
-  const url = URL.createObjectURL(new Blob([content], { type: "text/csv;charset=utf-8" }));
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = name;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
 const EMPTY_HOLDINGS: Holding[] = [];
 
 function PortfolioPage() {
@@ -62,8 +55,13 @@ function PortfolioPage() {
   const summary = useMemo(() => portfolioSummary(holdings), [holdings]);
   const [search, setSearch] = useState(""),
     [category, setCategory] = useState("all");
-  const [editor, setEditor] = useState<{ holding: Holding | null } | null>(null),
-    [importing, setImporting] = useState(false);
+  const [editor, setEditor] = useState<{ holding: Holding | null } | null>(null);
+  const [sort, setSort] = useState<HoldingSort>("exposure");
+  const [direction, setDirection] = useState<"asc" | "desc">("desc");
+  function changeSort(next: HoldingSort) {
+    setSort(next);
+    setDirection(next === "name" || next === "category" || next === "redemption" ? "asc" : "desc");
+  }
   const [detail, setDetail] = useState<Holding | null>(null),
     [deleting, setDeleting] = useState<Holding | null>(null);
   const [notice, setNotice] = useState("");
@@ -82,15 +80,6 @@ function PortfolioPage() {
       await refresh();
     },
   });
-  const imported = useMutation({
-    mutationFn: ({ items, date }: { items: Parameters<typeof importHoldings>[0]; date: string }) =>
-      importHoldings(items, date),
-    onSuccess: async (count) => {
-      setImporting(false);
-      setNotice(`${count} holdings imported. Existing handover notes were preserved.`);
-      await refresh();
-    },
-  });
   const removed = useMutation({
     mutationFn: deleteHolding,
     onSuccess: async () => {
@@ -99,64 +88,29 @@ function PortfolioPage() {
       await refresh();
     },
   });
-  const filtered = holdings.filter(
-    (h) =>
-      (category === "all" || h.category === category) &&
-      `${h.name} ${h.category} ${h.handover?.institution ?? ""}`
-        .toLowerCase()
-        .includes(search.toLowerCase()),
+  const filtered = sortHoldings(
+    holdings.filter(
+      (h) =>
+        (category === "all" || h.category === category) &&
+        `${h.name} ${h.category} ${h.handover?.institution ?? ""}`
+          .toLowerCase()
+          .includes(search.toLowerCase()),
+    ),
+    sort,
+    direction,
+    summary.assets,
   );
   const thisMonth = todayISO().slice(0, 7);
   const maturities = holdings
     .filter((h) => h.redemption_kind === "month" && h.redemption_month)
     .sort((a, b) => a.redemption_month!.localeCompare(b.redemption_month!));
-  function exportNotes() {
-    download(
-      "portfolio-handover.csv",
-      csvFile([
-        [
-          "Item",
-          "Category",
-          "Position",
-          "Value INR",
-          "Valuation date",
-          "Redemption",
-          "Institution",
-          "Masked reference",
-          "Contact",
-          "Document location",
-          "Instructions",
-        ],
-        ...holdings.map((h) => [
-          h.name,
-          h.category,
-          h.position_type,
-          h.valuation?.value_inr ?? null,
-          h.valuation?.valued_on ?? "",
-          redemptionLabel(h),
-          h.handover?.institution ?? "",
-          h.handover?.masked_reference ?? "",
-          h.handover?.contact ?? "",
-          h.handover?.document_location ?? "",
-          h.handover?.instructions ?? "",
-        ]),
-      ]),
-    );
-  }
   return (
     <AppShell
       title="Portfolio"
       subtitle="One private register for your assets, obligations, and handover notes · all amounts in INR"
       actions={
         <div className="flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            disabled={query.isPending || query.isError}
-            onClick={() => {
-              imported.reset();
-              setImporting(true);
-            }}
-          >
+          <Button variant="outline" disabled title="Portfolio import is disabled">
             <Upload className="size-4" />
             Import CSV
           </Button>
@@ -220,6 +174,7 @@ function PortfolioPage() {
             Entire portfolio · unknown values are excluded from totals. Values are manual snapshots,
             not live prices. Insurance should use surrender/current value, not death cover.
           </p>
+          <PortfolioGoals holdings={holdings} />
           <div className="mt-6 grid gap-5 lg:grid-cols-2">
             <Panel
               title="Asset allocation"
@@ -301,6 +256,37 @@ function PortfolioPage() {
                     <option key={c}>{c}</option>
                   ))}
                 </select>
+                <select
+                  aria-label="Sort holdings by"
+                  className="h-9 max-w-48 rounded border border-input bg-background px-2 text-sm"
+                  value={sort}
+                  onChange={(e) => changeSort(e.target.value as HoldingSort)}
+                >
+                  {(
+                    [
+                      ["exposure", "Exposure"],
+                      ["name", "Item"],
+                      ["category", "Category"],
+                      ["cost", "Cost"],
+                      ["value", "Value"],
+                      ["gain", "Gain / loss"],
+                      ["redemption", "Redemption"],
+                    ] as const
+                  ).map(([key, label]) => (
+                    <option key={key} value={key}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  aria-label="Sort direction"
+                  className="h-9 rounded border border-input bg-background px-2 text-sm"
+                  value={direction}
+                  onChange={(e) => setDirection(e.target.value as typeof direction)}
+                >
+                  <option value="desc">Descending</option>
+                  <option value="asc">Ascending</option>
+                </select>
               </div>
             }
           >
@@ -308,8 +294,8 @@ function PortfolioPage() {
               <div className="py-8 text-center">
                 <p className="font-medium">Bring your investments into one place</p>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  Add a holding or import your spreadsheet. Cash, insurance, receivables and
-                  liabilities can all be tracked here.
+                  Add a holding. Cash, insurance, receivables and liabilities can all be tracked
+                  here.
                 </p>
               </div>
             ) : !filtered.length ? (
@@ -395,17 +381,44 @@ function PortfolioPage() {
                   <table className="w-full min-w-[960px] text-left text-sm">
                     <thead className="border-b border-border text-xs uppercase text-muted-foreground">
                       <tr>
-                        {[
-                          "Item",
-                          "Cost",
-                          "Value",
-                          "Gain / loss",
-                          "Exposure",
-                          "Redemption",
-                          "Actions",
-                        ].map((h) => (
-                          <th key={h} className="px-2 pb-3 font-medium">
-                            {h}
+                        {(
+                          [
+                            ["Item", "name"],
+                            ["Cost", "cost"],
+                            ["Value", "value"],
+                            ["Gain / loss", "gain"],
+                            ["Exposure", "exposure"],
+                            ["Redemption", "redemption"],
+                            ["Actions", null],
+                          ] as const
+                        ).map(([label, key]) => (
+                          <th
+                            key={label}
+                            className="px-2 pb-3 font-medium"
+                            aria-sort={
+                              key && sort === key
+                                ? direction === "asc"
+                                  ? "ascending"
+                                  : "descending"
+                                : undefined
+                            }
+                          >
+                            {key ? (
+                              <button
+                                type="button"
+                                className="text-left"
+                                onClick={() => {
+                                  if (sort === key)
+                                    setDirection(direction === "asc" ? "desc" : "asc");
+                                  else changeSort(key);
+                                }}
+                              >
+                                {label}
+                                {sort === key ? (direction === "desc" ? " ↓" : " ↑") : ""}
+                              </button>
+                            ) : (
+                              label
+                            )}
                           </th>
                         ))}
                       </tr>
@@ -499,7 +512,7 @@ function PortfolioPage() {
             title="Handover to Hana"
             description="Keep institution contacts, masked references, document locations and instructions with each holding. These notes do not grant access or transfer legal ownership."
             actions={
-              <Button variant="outline" disabled={!holdings.length} onClick={exportNotes}>
+              <Button variant="outline" disabled title="Portfolio export is disabled">
                 <Download className="size-4" />
                 Export handover CSV
               </Button>
@@ -507,9 +520,8 @@ function PortfolioPage() {
           >
             <p className="text-sm text-muted-foreground">
               <BookOpen className="mr-2 inline size-4" />
-              Open a holding to review its notes and valuation history. Exported files contain
-              private financial information; keep them somewhere secure. Never store passwords, PINs
-              or recovery codes.
+              Open a holding to review its notes and valuation history. Portfolio import and export
+              are disabled. Never store passwords, PINs or recovery codes.
             </p>
           </Panel>
         </>
@@ -522,14 +534,6 @@ function PortfolioPage() {
           error={save.error?.message ?? ""}
           onClose={() => setEditor(null)}
           onSave={(...args) => save.mutate({ id: editor.holding?.id ?? null, args })}
-        />
-      )}
-      {importing && (
-        <PortfolioImport
-          pending={imported.isPending}
-          error={imported.error?.message ?? ""}
-          onClose={() => setImporting(false)}
-          onImport={(items, date) => imported.mutate({ items, date })}
         />
       )}
       {detail && (

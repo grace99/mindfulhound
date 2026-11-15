@@ -1,11 +1,11 @@
 import { supabase } from "./ledger-client";
-import type { Asset, Valuation, Handover, AssetInput, ImportRow } from "./portfolio-model";
+import type { Asset, Valuation, Handover, AssetInput } from "./portfolio-model";
 import { joinHoldings } from "./portfolio-model";
 import type { Json } from "@/integrations/supabase/types";
 
 // Page each table so a REST row cap cannot silently distort portfolio totals.
-async function allRows<T>(
-  table: "portfolio_assets" | "portfolio_valuations" | "portfolio_handover",
+export async function allRows<T>(
+  table: "portfolio_assets" | "portfolio_valuations" | "portfolio_handover" | "portfolio_goals",
 ): Promise<T[]> {
   const rows: T[] = [];
   for (let page = 0; page < 100; page++) {
@@ -39,14 +39,6 @@ export async function saveHolding(
     _asset: asset as Json,
     _valuation: valuation as Json,
     _handover: handover as Json,
-  });
-  if (error) throw new Error(error.message);
-  return data;
-}
-export async function importHoldings(items: ImportRow[], valuedOn: string) {
-  const { data, error } = await supabase.rpc("import_portfolio_assets", {
-    _items: items as Json,
-    _valued_on: valuedOn,
   });
   if (error) throw new Error(error.message);
   return data;

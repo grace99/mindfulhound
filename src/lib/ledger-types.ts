@@ -1,3 +1,4 @@
+import type { Goal } from "./portfolio-goals";
 import type { Asset, Valuation, Handover } from "./portfolio-model";
 import type { Json } from "@/integrations/supabase/types";
 type PortfolioTable<T> = { Row: T; Insert: Partial<T>; Update: Partial<T>; Relationships: [] };
@@ -9,6 +10,7 @@ type Public = CloudDatabase["public"];
 export type Database = Omit<CloudDatabase, "public"> & {
   public: Omit<Public, "Tables" | "Functions"> & {
     Tables: {
+      portfolio_goals: PortfolioTable<Goal>;
       portfolio_assets: PortfolioTable<Asset>;
       portfolio_valuations: PortfolioTable<Valuation>;
       portfolio_handover: PortfolioTable<Handover>;

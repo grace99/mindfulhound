@@ -1,5 +1,10 @@
 # Private INR portfolio
 
+The current release disables portfolio import/export and adds sorting, an
+emergency reserve and financial goals. See [the goals upgrade guide](portfolio-goals.md)
+for the additional migration and calculation rules. The import/export details
+below describe the original release and are not currently enabled.
+
 ## Deployment
 
 Apply `supabase/migrations/20261114000000_private_portfolio.sql` in the SQL Editor
