@@ -37,5 +37,8 @@ lockfile-based development workflow.
 
 The Portfolio module adds private INR holdings, dated valuation history and
 handover notes. Apply the [portfolio migration](docs/portfolio.md) in the existing
-Supabase project before deploying this version. Personal spreadsheet rows are
-imported through a CSV preview and are not included in the source repository.
+Supabase project before deploying this version. Personal financial rows are not included in the source repository. Portfolio
+import/export are disabled in the current release.
+
+Portfolio goal planning and sorting require the [goals upgrade migration](docs/portfolio-goals.md).
+The current version disables portfolio import/export and reserves ₹10,00,000 before goal planning.
